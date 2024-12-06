@@ -6,6 +6,14 @@ venv/
 # Node
 node_modules/
 build/
+.output/
+.vercel/
+.svelte-kit/
+
+# Environment
+.env
+.env.*
+!.env.example
 
 # Misc.
 .ropeproject/

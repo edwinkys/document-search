@@ -1,0 +1,12 @@
+This directory can be used to store static files.
+
+All files in this directory will be included in the final build output.
+This directory is useful for storing images, fonts, and other files that are
+not processed by the build pipeline.
+
+To reference any files in this directory, use the / prefix.
+
+For consistency, we want to name the files in this directory with:
+- Lowercase letters
+- Separated by hyphens
+- No spaces
