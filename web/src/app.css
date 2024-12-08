@@ -1,3 +1,46 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
+@layer base {
+  body {
+    @apply bg-gray-100 text-gray-900;
+    @apply leading-normal tracking-normal;
+    font-family: "Outfit", sans-serif;
+    font-size: 16px;
+  }
+
+  pre,
+  code,
+  kbd {
+    font-family: "DM Mono", monospace;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-bold;
+  }
+
+  h1 {
+    @apply text-6xl;
+  }
+
+  h2 {
+    @apply text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl;
+  }
+
+  button,
+  link {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+
+  header {
+    @apply flex flex-row items-center bg-white;
+    height: 80px;
+  }
+}
