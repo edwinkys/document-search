@@ -34,11 +34,6 @@
     @apply text-2xl;
   }
 
-  button,
-  link {
-    @apply transition-colors duration-300 ease-in-out;
-  }
-
   header {
     @apply flex flex-row items-center bg-white;
     height: 80px;
