@@ -1,9 +1,14 @@
 <script lang="ts">
-  export let id: string
+  import type { FullAutoFill } from "svelte/elements"
+
   export let label: string
   export let placeholder: string
   export let value: string
-  export let type: string = "text"
+  export let type: "text" | "email" | "password" = "text"
+  export let autocomplete: FullAutoFill = "on"
+
+  // Generate an ID based on the label.
+  const id = label.toLowerCase().replaceAll(" ", "-")
 </script>
 
 <label for={id} class="input-container border-gray-500">
@@ -12,8 +17,10 @@
     class="bg-transparent outline-none"
     bind:value
     name={id}
+    {id}
     {placeholder}
     {type}
+    {autocomplete}
   />
 </label>
 

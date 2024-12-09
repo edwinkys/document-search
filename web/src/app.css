@@ -34,6 +34,14 @@
     @apply text-2xl;
   }
 
+  a {
+    @apply text-blue-500;
+  }
+
+  a:hover {
+    @apply text-blue-600;
+  }
+
   header {
     @apply flex flex-row items-center bg-white;
     height: 80px;
