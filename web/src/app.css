@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-gray-100 text-gray-900;
+    @apply bg-white text-gray-800;
     @apply leading-normal tracking-normal;
     font-family: "Outfit", sans-serif;
     font-size: 16px;
@@ -43,7 +43,7 @@
 @layer components {
   .alert-container {
     @apply fixed bottom-0 right-0 w-full;
-    @apply flex flex-col p-3 space-y-1;
+    @apply flex flex-col p-3;
   }
 
   @screen md {

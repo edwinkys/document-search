@@ -21,7 +21,7 @@
 
 <style lang="postcss">
   .alert-card {
-    @apply flex p-4 text-sm rounded-lg w-full;
+    @apply flex p-4 text-sm rounded w-full;
     @apply border border-l-8;
   }
 

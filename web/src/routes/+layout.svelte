@@ -13,7 +13,7 @@
   import AlertCard from "$lib/components/cards/alert.svelte"
 </script>
 
-<ul class="alert-container">
+<ul class="alert-container space-y-1">
   {#each $alerts as alert (alert.id)}
     <li animate:flip={{ duration: 200 }}>
       <AlertCard {alert} />

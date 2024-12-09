@@ -20,10 +20,10 @@
 <style lang="postcss">
   .input-container {
     @apply flex flex-col px-3 py-2;
-    @apply border border-black border-opacity-25 rounded-lg;
+    @apply border border-black border-opacity-25 rounded;
   }
 
   .input-container:focus-within {
-    @apply outline outline-indigo-700;
+    @apply outline outline-blue-500;
   }
 </style>
