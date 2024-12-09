@@ -1,10 +1,30 @@
 <script lang="ts">
+  import { supabase } from "$lib"
+  import { alerts } from "$lib/stores"
+  import type { Alert } from "$lib/types"
   import Input from "$lib/components/utils/input.svelte"
   import Button from "$lib/components/utils/button.svelte"
 
   let email: string = ""
 
-  function joinWaitlist() {}
+  async function joinWaitlist() {
+    if (!email) return
+    if (!email.includes("@")) return
+
+    const { error } = await supabase.from("waitlist").insert([{ email }])
+    if (!error) {
+      alerts.update((alerts: Alert[]) => [
+        ...alerts,
+        {
+          id: crypto.randomUUID(),
+          message: "You've been added to the waitlist!",
+          type: "success"
+        }
+      ])
+    }
+
+    email = ""
+  }
 </script>
 
 <section class="hero-section">

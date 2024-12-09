@@ -39,3 +39,16 @@
     height: 80px;
   }
 }
+
+@layer components {
+  .alert-container {
+    @apply fixed bottom-0 right-0 w-full;
+    @apply flex flex-col p-3 space-y-1;
+  }
+
+  @screen md {
+    .alert-container {
+      width: 450px;
+    }
+  }
+}

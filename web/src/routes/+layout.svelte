@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { flip } from "svelte/animate"
+  import { alerts } from "$lib/stores"
   import "../app.css"
 
   // Typography.
@@ -8,7 +10,16 @@
 
   // Components.
   import Wordmark from "$lib/components/utils/wordmark.svelte"
+  import AlertCard from "$lib/components/cards/alert.svelte"
 </script>
+
+<ul class="alert-container">
+  {#each $alerts as alert (alert.id)}
+    <li animate:flip={{ duration: 200 }}>
+      <AlertCard {alert} />
+    </li>
+  {/each}
+</ul>
 
 <header>
   <div class="header-container">
