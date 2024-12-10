@@ -29,7 +29,7 @@
       bind:value={password}
       autocomplete="current-password"
     />
-    <a class="text-right text-sm text-gray-500" href="/forgot-password">
+    <a class="text-right text-sm text-gray-500" href="/reset-password">
       Forgot password?
     </a>
   </div>
