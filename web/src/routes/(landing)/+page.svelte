@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from "$app/navigation"
   import Button from "$lib/components/utils/button.svelte"
 </script>
 
@@ -13,9 +14,7 @@
           access!
         </p>
       </div>
-      <a href="/create-account">
-        <Button content="Get started" />
-      </a>
+      <Button content="Get started" action={() => goto("/create-account")} />
     </div>
     <div class="hidden md:flex">
       <img

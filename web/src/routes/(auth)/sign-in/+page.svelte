@@ -6,7 +6,16 @@
   let email: string = ""
   let password: string = ""
 
-  function signIn() {}
+  let disabled: boolean = true
+  $: disabled = email.length < 3 || password.length < 8
+
+  async function signIn() {
+    if (!email || !password) {
+      return
+    }
+
+    disabled = true
+  }
 </script>
 
 <Title title="Sign In" />
@@ -29,12 +38,12 @@
       bind:value={password}
       autocomplete="current-password"
     />
-    <a class="text-right text-sm text-gray-500" href="/reset-password">
-      Forgot password?
-    </a>
+    <p class="text-right text-sm text-gray-500">
+      <a href="/reset-password">Forgot password?</a>
+    </p>
   </div>
 </div>
-<Button content="Sign in" action={signIn} />
+<Button content="Sign in" action={signIn} {disabled} />
 <p class="text-center text-gray-500">
   New to Skylens?
   <a href="/create-account">Create an account</a>

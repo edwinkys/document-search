@@ -5,7 +5,16 @@
 
   let email: string = ""
 
-  function resetPassword() {}
+  let disabled: boolean = true
+  $: disabled = email.length < 3
+
+  async function resetPassword() {
+    if (!email) {
+      return
+    }
+
+    disabled = true
+  }
 </script>
 
 <Title title="Reset Password" />
@@ -20,5 +29,5 @@
     placeholder="name@domain.com"
     bind:value={email}
   />
-  <Button content="Reset password" action={resetPassword} />
+  <Button content="Reset password" action={resetPassword} {disabled} />
 </div>

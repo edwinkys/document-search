@@ -38,13 +38,27 @@
     @apply text-blue-500;
   }
 
-  a:hover {
+  a:hover,
+  a:focus {
     @apply text-blue-600;
+  }
+
+  a:focus {
+    @apply outline-none underline;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed;
   }
 
   header {
     @apply flex flex-row items-center bg-white;
     height: 80px;
+  }
+
+  :focus {
+    @apply outline outline-2 outline-offset-2;
+    @apply outline-blue-500 rounded;
   }
 }
 

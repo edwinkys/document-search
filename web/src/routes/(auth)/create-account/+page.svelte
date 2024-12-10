@@ -7,7 +7,16 @@
   let email: string = ""
   let password: string = ""
 
-  function createAccount() {}
+  let disabled: boolean = true
+  $: disabled = email.length < 3 || password.length < 8
+
+  async function createAccount() {
+    if (!email || !password) {
+      return
+    }
+
+    disabled = true
+  }
 </script>
 
 <Title title="Create Account" />
@@ -24,7 +33,7 @@
   />
   <NewPassword bind:password />
 </div>
-<Button content="Create account" action={createAccount} />
+<Button content="Create account" action={createAccount} {disabled} />
 <p class="text-center text-gray-500">
   Have an account?
   <a href="/sign-in">Sign in</a>

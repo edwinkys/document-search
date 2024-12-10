@@ -20,6 +20,7 @@
     criteria.uppercase.met = /[A-Z]/.test(password)
     criteria.lowercase.met = /[a-z]/.test(password)
     criteria.numbers.met = /[0-9]/.test(password)
+    criteria = { ...criteria }
   }
 </script>
 
