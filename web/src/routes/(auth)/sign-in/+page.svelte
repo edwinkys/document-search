@@ -1,6 +1,6 @@
 <script lang="ts">
   import Title from "$lib/components/utils/title.svelte"
-  import Input from "$lib/components/utils/input.svelte"
+  import Input from "$lib/components/fields/input.svelte"
   import Button from "$lib/components/utils/button.svelte"
 
   let email: string = ""

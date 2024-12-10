@@ -1,29 +1,11 @@
 <script lang="ts">
   import Title from "$lib/components/utils/title.svelte"
-  import Input from "$lib/components/utils/input.svelte"
+  import Input from "$lib/components/fields/input.svelte"
+  import NewPassword from "$lib/components/fields/new-password.svelte"
   import Button from "$lib/components/utils/button.svelte"
 
   let email: string = ""
   let password: string = ""
-
-  type PasswordRequirement = {
-    label: string
-    met: boolean
-  }
-
-  let criteria: { [name: string]: PasswordRequirement } = {
-    length: { label: "At least 8 characters", met: false },
-    uppercase: { label: "Uppercase letters", met: false },
-    lowercase: { label: "Lowercase letters", met: false },
-    numbers: { label: "Numbers", met: false }
-  }
-
-  $: {
-    criteria.length.met = password.length >= 8
-    criteria.uppercase.met = /[A-Z]/.test(password)
-    criteria.lowercase.met = /[a-z]/.test(password)
-    criteria.numbers.met = /[0-9]/.test(password)
-  }
 
   function createAccount() {}
 </script>
@@ -40,33 +22,10 @@
     placeholder="name@domain.com"
     bind:value={email}
   />
-  <Input
-    type="password"
-    label="Password"
-    placeholder="••••••••"
-    bind:value={password}
-    autocomplete="new-password"
-  />
-  <ul class="bullet-list space-y-1">
-    {#each Object.keys(criteria) as key}
-      <li class={criteria[key].met ? "text-green-500" : ""}>
-        {criteria[key].label}
-      </li>
-    {/each}
-  </ul>
+  <NewPassword bind:password />
 </div>
 <Button content="Create account" action={createAccount} />
 <p class="text-center text-gray-500">
   Have an account?
   <a href="/sign-in">Sign in</a>
 </p>
-
-<style lang="postcss">
-  .bullet-list {
-    @apply text-sm text-gray-500;
-  }
-
-  .bullet-list li {
-    @apply list-disc list-inside ml-2;
-  }
-</style>
