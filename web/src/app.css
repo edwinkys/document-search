@@ -63,6 +63,14 @@
 }
 
 @layer components {
+  .sidebar-toggle-button {
+    @apply p-2 rounded bg-gray-100 text-gray-500;
+  }
+
+  .sidebar-toggle-button:hover {
+    @apply bg-gray-200;
+  }
+
   .alert-container {
     @apply fixed bottom-0 right-0 w-full;
     @apply flex flex-col p-3;

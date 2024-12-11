@@ -32,6 +32,7 @@
   "dependencies": {
     "@fontsource/dm-mono": "^5.1.0",
     "@fontsource/outfit": "^5.1.0",
-    "@supabase/supabase-js": "^2.47.2"
+    "@supabase/supabase-js": "^2.47.2",
+    "carbon-icons-svelte": "^12.13.0"
   }
 }

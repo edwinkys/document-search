@@ -11,8 +11,8 @@
 
 <style lang="postcss">
   .button-container {
-    @apply flex flex-row items-center justify-center;
-    @apply px-6 py-3 rounded w-full;
+    @apply flex flex-row flex-none items-center justify-center;
+    @apply px-6 py-3 rounded truncate;
   }
 
   .button-container.primary {
