@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-white text-gray-800;
+    @apply bg-gray-100 text-gray-900;
     @apply leading-normal tracking-normal;
     font-family: "Outfit", sans-serif;
     font-size: 16px;
@@ -35,12 +35,12 @@
   }
 
   a {
-    @apply text-blue-500;
+    @apply text-indigo-700;
   }
 
   a:hover,
   a:focus {
-    @apply text-blue-600;
+    @apply text-indigo-600;
   }
 
   a:focus {
@@ -58,7 +58,7 @@
 
   :focus {
     @apply outline outline-2 outline-offset-2;
-    @apply outline-blue-500 rounded;
+    @apply outline-indigo-700 rounded;
   }
 }
 
@@ -68,7 +68,7 @@
   }
 
   .sidebar-toggle-button:hover {
-    @apply bg-gray-200;
+    @apply bg-gray-100;
   }
 
   .alert-container {

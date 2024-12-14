@@ -6,7 +6,7 @@
   let email: string = ""
 
   let disabled: boolean = true
-  $: disabled = email.length < 3
+  $: disabled = email.length < 3 || !email.includes("@")
 
   async function resetPassword() {
     if (!email) {

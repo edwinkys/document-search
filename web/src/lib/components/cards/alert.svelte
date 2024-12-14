@@ -22,7 +22,7 @@
 <style lang="postcss">
   .alert-card {
     @apply flex p-4 text-sm rounded w-full;
-    @apply border border-l-8;
+    @apply border border-l-4;
   }
 
   .alert-card.success {

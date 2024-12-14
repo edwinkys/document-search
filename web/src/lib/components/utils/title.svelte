@@ -4,6 +4,6 @@
 
 <svelte:head>
   <title>
-    {title} – Skylens
+    {title} – DocuLens
   </title>
 </svelte:head>

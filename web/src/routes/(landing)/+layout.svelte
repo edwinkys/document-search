@@ -53,25 +53,27 @@
   {/each}
 </ul>
 
-<header class="header-container">
-  <Wordmark />
-  <div class="desktop-menu space-x-2">
-    {#each links as link}
-      <a href={link.href} class="py-2 px-3 rounded">{link.name}</a>
-    {/each}
+<header>
+  <div class="header-container">
+    <Wordmark />
+    <div class="desktop-menu space-x-2">
+      {#each links as link}
+        <a href={link.href} class="py-2 px-3 rounded">{link.name}</a>
+      {/each}
+    </div>
+    <div class="desktop-menu space-x-4">
+      {#each buttons as button}
+        <Button
+          content={button.content}
+          type={button.type as "primary" | "secondary"}
+          action={button.action}
+        />
+      {/each}
+    </div>
+    <button class="sidebar-toggle-button lg:hidden" on:click={openSidebar}>
+      <SidePanelOpenFilled size={20} />
+    </button>
   </div>
-  <div class="desktop-menu space-x-4">
-    {#each buttons as button}
-      <Button
-        content={button.content}
-        type={button.type as "primary" | "secondary"}
-        action={button.action}
-      />
-    {/each}
-  </div>
-  <button class="sidebar-toggle-button lg:hidden" on:click={openSidebar}>
-    <SidePanelOpenFilled size={20} />
-  </button>
 </header>
 
 <slot />

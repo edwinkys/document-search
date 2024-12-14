@@ -8,7 +8,7 @@
   let password: string = ""
 
   let disabled: boolean = true
-  $: disabled = email.length < 3 || password.length < 8
+  $: disabled = email.length < 3 || !email.includes("@") || password.length < 8
 
   async function createAccount() {
     if (!email || !password) {
@@ -21,8 +21,8 @@
 
 <Title title="Create Account" />
 <div class="flex flex-col items-center text-center space-y-2">
-  <h2>Welcome to Skylens</h2>
-  <p class="text-gray-500">Bluesky account manager designed for teams.</p>
+  <h2>Welcome to DocuLens</h2>
+  <p class="text-gray-500">A robust search API platform for complex PDFs.</p>
 </div>
 <div class="flex flex-col space-y-4">
   <Input

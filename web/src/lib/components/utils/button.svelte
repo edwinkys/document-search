@@ -16,18 +16,18 @@
   }
 
   .button-container.primary {
-    @apply bg-blue-500 text-white;
+    @apply bg-indigo-700 text-white;
   }
 
   .button-container.primary:hover {
-    @apply bg-blue-600;
+    @apply bg-indigo-600;
   }
 
   .button-container.primary:disabled {
-    @apply bg-blue-400;
+    @apply bg-indigo-700 bg-opacity-50;
   }
 
   .button-container.secondary {
-    @apply text-blue-500 border border-blue-500;
+    @apply text-indigo-700 border border-indigo-700;
   }
 </style>

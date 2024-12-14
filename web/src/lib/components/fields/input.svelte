@@ -31,6 +31,6 @@
   }
 
   .input-container:focus-within {
-    @apply outline outline-blue-500;
+    @apply outline outline-indigo-700;
   }
 </style>

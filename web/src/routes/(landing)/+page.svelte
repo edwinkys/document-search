@@ -6,12 +6,12 @@
 <section class="hero-section">
   <div class="hero-container">
     <div class="flex flex-col space-y-9 justify-center">
-      <div class="flex flex-col space-y-2">
-        <h1>Collaborate on your Bluesky account</h1>
-        <p class="text-gray-600">
-          We're building a platform to help you collaborate with your team on
-          growing your Bluesky business account. Join the waitlist to get early
-          access!
+      <div class="flex flex-col space-y-6">
+        <h1>10x your PDF search with AI</h1>
+        <p class="text-gray-500">
+          We're building an API platform to help you process and search complex
+          PDFs containing images and tables with natural language queries with
+          ease.
         </p>
       </div>
       <Button content="Get started" action={() => goto("/create-account")} />
@@ -29,7 +29,7 @@
 <style lang="postcss">
   .hero-container {
     @apply grid grid-cols-1 gap-6;
-    @apply px-6 py-24 bg-gradient-to-r from-blue-100 to-violet-300;
+    @apply px-6 py-24 bg-indigo-100;
   }
 
   @screen md {
@@ -40,7 +40,7 @@
 
   @screen lg {
     .hero-section {
-      @apply container mx-auto p-6;
+      @apply container mx-auto px-6 py-12;
     }
 
     .hero-container {

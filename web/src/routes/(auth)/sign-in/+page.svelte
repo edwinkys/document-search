@@ -7,7 +7,7 @@
   let password: string = ""
 
   let disabled: boolean = true
-  $: disabled = email.length < 3 || password.length < 8
+  $: disabled = email.length < 3 || !email.includes("@") || password.length < 8
 
   async function signIn() {
     if (!email || !password) {
@@ -45,6 +45,6 @@
 </div>
 <Button content="Sign in" action={signIn} {disabled} />
 <p class="text-center text-gray-500">
-  New to Skylens?
+  New to DocuLens?
   <a href="/create-account">Create an account</a>
 </p>
