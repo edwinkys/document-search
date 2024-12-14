@@ -1,4 +1,9 @@
 <script lang="ts">
+  import { onMount } from "svelte"
+  import { goto } from "$app/navigation"
+  import { supabase } from "$lib"
+  import { alerts } from "$lib/stores"
+  import { validEmail } from "$lib/utils/validations"
   import Title from "$lib/components/utils/title.svelte"
   import Input from "$lib/components/fields/input.svelte"
   import NewPassword from "$lib/components/fields/new-password.svelte"
@@ -8,14 +13,38 @@
   let password: string = ""
 
   let disabled: boolean = true
-  $: disabled = email.length < 3 || !email.includes("@") || password.length < 8
+  $: disabled = !validEmail(email) || password.length < 8
+
+  let origin: string = ""
+  onMount(() => {
+    origin = window?.location.origin
+  })
 
   async function createAccount() {
-    if (!email || !password) {
+    disabled = true
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${origin}/projects` }
+    })
+
+    if (error) {
+      disabled = false
+      console.error(error)
+      alerts.update((alerts) => [
+        ...alerts,
+        {
+          id: crypto.randomUUID(),
+          type: "error",
+          message: "Failed to create an account."
+        }
+      ])
+
       return
     }
 
-    disabled = true
+    if (data) goto("/projects")
   }
 </script>
 

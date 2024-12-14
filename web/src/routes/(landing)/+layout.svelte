@@ -1,9 +1,6 @@
 <script lang="ts">
-  import { flip } from "svelte/animate"
-  import { alerts } from "$lib/stores"
   import { goto } from "$app/navigation"
   import Wordmark from "$lib/components/utils/wordmark.svelte"
-  import AlertCard from "$lib/components/cards/alert.svelte"
   import Sidebar from "$lib/components/navs/sidebar.svelte"
   import Button from "$lib/components/utils/button.svelte"
   import { SidePanelOpenFilled } from "carbon-icons-svelte"
@@ -44,14 +41,6 @@
     </div>
   </Sidebar>
 </div>
-
-<ul class="alert-container space-y-1">
-  {#each $alerts as alert (alert.id)}
-    <li animate:flip={{ duration: 200 }}>
-      <AlertCard {alert} />
-    </li>
-  {/each}
-</ul>
 
 <header>
   <div class="header-container">

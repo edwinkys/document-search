@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { goto } from "$app/navigation"
+  import { alerts } from "$lib/stores"
+  import { supabase } from "$lib"
+  import { validEmail } from "$lib/utils/validations"
   import Title from "$lib/components/utils/title.svelte"
   import Input from "$lib/components/fields/input.svelte"
   import Button from "$lib/components/utils/button.svelte"
@@ -7,14 +11,32 @@
   let password: string = ""
 
   let disabled: boolean = true
-  $: disabled = email.length < 3 || !email.includes("@") || password.length < 8
+  $: disabled = !validEmail(email) || password.length < 8
 
   async function signIn() {
-    if (!email || !password) {
+    disabled = true
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+
+    if (error) {
+      disabled = false
+      console.error(error)
+      alerts.update((alerts) => [
+        ...alerts,
+        {
+          id: crypto.randomUUID(),
+          type: "error",
+          message: "Failed to sign in. Please check your credentials."
+        }
+      ])
+
       return
     }
 
-    disabled = true
+    if (data) goto("/projects")
   }
 </script>
 
