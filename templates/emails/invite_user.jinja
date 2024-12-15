@@ -1,0 +1,15 @@
+{% extends "template.html" %}
+{% import "macros.jinja" as macros %}
+
+{% block title %}
+  You're invited to join DocuLens!
+{% endblock %}
+
+{% block content %}
+  <h1>You're invited!</h1>
+  <p>
+    Hi there, you've been invited to join DocuLens. Please click the button
+    below to confirm your email address and create an account.
+  </p>
+  {{ macros.button("Accept invite", "{{ .ConfirmationURL }}") }}
+{% endblock %}

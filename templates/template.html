@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}{% endblock %}</title>
+  </head>
+  <body style="font-family: Lucida, sans-serif; margin: 0; padding: 0">
+    <main style="max-width: 500px; margin: 64px auto">
+      <div style="padding: 16px">
+        <img
+          src="https://doculens-assets.s3.amazonaws.com/logos/logo.svg"
+          style="width: 40px; display: block; margin: 0 auto"
+        />
+      </div>
+      <div style="padding: 16px; line-height: 1.5">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </body>
+</html>

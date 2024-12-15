@@ -1,0 +1,21 @@
+{% macro button(text, url) %}
+  <a
+    href="{{ url }}"
+    style="
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      background-color: #4338ca;
+      color: #fff;
+      border-radius: 4px;
+      padding: 16px 32px;
+      margin: 32px 0;
+    "
+  >
+    {{ text }}
+  </a>
+{% endmacro %}
+
+{% macro contact(email) %}
+  <a href="mailto:{{ email }}">{{ email }}</a>
+{% endmacro %}

@@ -1,0 +1,17 @@
+{% extends "template.html" %}
+{% import "macros.jinja" as macros %}
+
+{% block title %}
+  Please confirm your new email
+{% endblock %}
+
+{% block content %}
+  <h1>Confirm new email</h1>
+  <p>
+    We received a request to change the email associated with your account.
+    If you made this request, please click the button below to confirm the
+    change:
+  </p>
+  {{ macros.button("Confirm email", "{{ .ConfirmationURL }}") }}
+  <p>If you did not make this request, please ignore this email.</p>
+{% endblock %}

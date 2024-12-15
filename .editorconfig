@@ -9,5 +9,5 @@ max_line_length = 80
 [*.{md,py}]
 indent_size = 4
 
-[*.{html,css,js,ts,svelte}]
+[*.{html,css,js,ts,svelte,jinja}]
 indent_size = 2

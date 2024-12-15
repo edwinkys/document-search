@@ -1,0 +1,21 @@
+{% extends "template.html" %}
+{% import "macros.jinja" as macros %}
+
+{% block title %}
+  Welcome to DocuLens!
+{% endblock %}
+
+{% block content %}
+  <h1>Welcome to DocuLens!</h1>
+  <p>Hey there! I'm Edwin, the builder behind DocuLens.</p>
+  <p>
+    I'm excited to have you on board. First things first, it'd be great if you
+    can do me a favor and verify your account by clicking the button below.
+  </p>
+  {{ macros.button("Verify account", "{{ .ConfirmationURL }}") }}
+  <p>
+    If you need help with setting up DocuLens for your project, please
+    don't hesitate to contact me at {{ macros.contact("edwin@doculens.dev") }}.
+  </p>
+  <p>Best,<br />Edwin</p>
+{% endblock %}

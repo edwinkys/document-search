@@ -1,0 +1,14 @@
+This directory contains Supabase authentication email templates for DocuLens.
+
+We use Jinja2 templating to generate the email templates. If we want to modify
+the email templates, we can do so by modifying the Jinja2 templates in the
+emails directory.
+
+After modifying the Jinja2 templates, we can run the following command
+to compile the email templates into HTML:
+
+python build.py
+
+This command will generate the HTML email templates in the build directory.
+Unfortunately, since Supabase doesn't have an API to update email templates,
+we have to manually copy the HTML email templates into the Supabase dashboard.

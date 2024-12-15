@@ -1,0 +1,16 @@
+{% extends "template.html" %}
+{% import "macros.jinja" as macros %}
+
+{% block title %}
+  Your authentication code for DocuLens
+{% endblock %}
+
+{% block content %}
+  <h1>Authentication code</h1>
+  <p>
+    Hi there, here is your authentication code for DocuLens. Please enter this
+    code in the app to re-confirm your identity. We do this to protect your
+    account from unauthorized access.
+  </p>
+  <h2><code>{{ "{{ .Token }}" }}</code></h2>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "template.html" %}
+{% import "macros.jinja" as macros %}
+
+{% block title %}
+  Link to sign in to DocuLens
+{% endblock %}
+
+{% block content %}
+  <h1>Sign in to DocuLens</h1>
+  <p>
+    Hi there, this is the magic link you've requested. To sign in to your
+    DocuLens account, simply click the button below.
+  </p>
+  {{ macros.button("Sign in", "{{ .ConfirmationURL }}") }}
+{% endblock %}
