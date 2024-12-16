@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}{% endblock %}</title>
   </head>
-  <body style="font-family: Lucida, sans-serif; margin: 0; padding: 0">
-    <main style="max-width: 500px; margin: 64px auto">
+  <body
+    style="
+      font-family: Lucida, Calibri, Verdana, sans-serif;
+      font-size: 16px;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <div style="max-width: 500px !important; margin: 64px auto">
       <div style="padding: 16px">
         <img
           src="https://doculens-assets.s3.amazonaws.com/logos/logo.svg"
@@ -16,6 +23,6 @@
       <div style="padding: 16px; line-height: 1.5">
         {% block content %}{% endblock %}
       </div>
-    </main>
+    </div>
   </body>
 </html>
