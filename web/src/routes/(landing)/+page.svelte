@@ -28,15 +28,15 @@
   }
 </script>
 
-<section class="hero-section">
-  <div class="hero-container">
+<section class="section-container">
+  <div class="max-w-screen-sm mx-auto py-12">
     <div class="flex flex-col space-y-9 justify-center">
-      <div class="flex flex-col space-y-6">
-        <h1>10x your PDF search with AI</h1>
+      <div class="flex flex-col space-y-6 md:text-center">
+        <h1>Extract 10x more insight from PDFs</h1>
         <p class="text-gray-500">
-          We're building an API platform to help you process and search complex
-          PDFs containing images and tables with natural language queries with
-          ease.
+          We're building an API platform to help you process complex multi-modal
+          PDFs containing images and tables into structured data that your AI
+          agents can use.
         </p>
       </div>
       <div class="flex flex-col space-y-4">
@@ -47,37 +47,45 @@
           bind:value={email}
         />
         <Button content="Join waitlist" action={joinWaitlist} />
+        <small class="text-center text-gray-500">
+          We'll never share your data with anyone!
+        </small>
       </div>
     </div>
-    <div class="hidden md:flex">
-      <img
-        src="/imgs/hero-illustration.png"
-        alt="Illustration"
-        class="object-contain"
-      />
+  </div>
+</section>
+
+<section class="section-container space-y-9">
+  <div class="flex flex-col space-y-3 items-center md:text-center">
+    <h2>Get started in minutes</h2>
+    <p class="max-w-screen-sm text-gray-500">
+      Create a project and integrate the API or SDK in your application in less
+      than 5 minutes with a single API to start processing PDF documents.
+    </p>
+  </div>
+  <div class="flex items-center justify-center">
+    <div class="code-container max-w-screen-md">
+      doculens.upload(<span class="text-green-500">
+        "./chase_statement_122024.pdf"
+      </span>)
     </div>
   </div>
 </section>
 
 <style lang="postcss">
-  .hero-container {
-    @apply grid grid-cols-1 gap-6;
-    @apply px-6 py-24 bg-indigo-100;
+  .section-container {
+    @apply container mx-auto px-6 py-12;
+    @apply flex flex-col;
   }
 
-  @screen md {
-    .hero-container {
-      @apply grid-cols-2;
-    }
+  .code-container {
+    @apply relative w-full p-6 bg-gray-900 text-gray-100 rounded-lg;
+    @apply font-mono text-lg whitespace-nowrap overflow-y-auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  @screen lg {
-    .hero-section {
-      @apply container mx-auto px-6 py-12;
-    }
-
-    .hero-container {
-      @apply px-12 py-6 rounded-3xl;
-    }
+  .code-container::-webkit-scrollbar {
+    display: none;
   }
 </style>
