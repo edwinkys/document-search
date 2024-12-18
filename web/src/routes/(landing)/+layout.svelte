@@ -6,14 +6,17 @@
   import { SidePanelOpenFilled } from "carbon-icons-svelte"
 
   const links = [
-    { name: "Demo", href: "#demo" },
+    { name: "Features", href: "#features" },
     { name: "Pricing", href: "#pricing" },
     { name: "FAQs", href: "#faqs" }
   ]
 
   const buttons = [
-    { content: "Sign in", type: "secondary", action: () => goto("/sign-in") },
-    { content: "Get started", action: () => goto("/create-account") }
+    {
+      content: "Join waitlist",
+      type: "primary",
+      action: () => goto("/")
+    }
   ]
 
   let sidebarShow = false
@@ -34,7 +37,7 @@
       {#each buttons as button}
         <Button
           content={button.content}
-          type={button.type as "primary" | "secondary"}
+          type={button?.type as "primary" | "secondary"}
           action={button.action}
         />
       {/each}
@@ -42,7 +45,8 @@
   </Sidebar>
 </div>
 
-<header>
+<div class="w-full h-[80px]"></div>
+<header class="fixed top-0 w-full">
   <div class="header-container">
     <Wordmark />
     <div class="desktop-menu space-x-2">

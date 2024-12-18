@@ -1,6 +1,31 @@
 <script lang="ts">
-  import { goto } from "$app/navigation"
+  import { supabase } from "$lib"
+  import { alerts } from "$lib/stores"
+  import { validEmail } from "$lib/utils/validations"
+  import Input from "$lib/components/fields/input.svelte"
   import Button from "$lib/components/utils/button.svelte"
+
+  let email: string = ""
+
+  async function joinWaitlist() {
+    if (!validEmail(email)) return
+
+    email = email.trim().toLowerCase()
+
+    const { error } = await supabase.from("waitlist").insert({ email })
+    if (error) console.error(error)
+
+    email = ""
+
+    alerts.update((alerts) => [
+      ...alerts,
+      {
+        id: crypto.randomUUID(),
+        type: "success",
+        message: "Thank you for joining the waitlist!"
+      }
+    ])
+  }
 </script>
 
 <section class="hero-section">
@@ -14,7 +39,15 @@
           ease.
         </p>
       </div>
-      <Button content="Get started" action={() => goto("/create-account")} />
+      <div class="flex flex-col space-y-4">
+        <Input
+          label="Email"
+          placeholder="name@domain.com"
+          type="email"
+          bind:value={email}
+        />
+        <Button content="Join waitlist" action={joinWaitlist} />
+      </div>
     </div>
     <div class="hidden md:flex">
       <img

@@ -27,12 +27,14 @@
   .overlay {
     @apply fixed top-0 w-dvw h-dvh;
     @apply bg-black bg-opacity-50;
+    z-index: 10;
   }
 
   .sidebar {
     @apply fixed top-0 h-dvh;
     @apply flex flex-col flex-none bg-white;
     width: 320px;
+    z-index: 15;
   }
 
   .sidebar-control {

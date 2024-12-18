@@ -5,7 +5,7 @@
 @layer base {
   body {
     @apply bg-gray-100 text-gray-900;
-    @apply leading-normal tracking-normal;
+    @apply leading-normal tracking-normal scroll-smooth;
     font-family: "Outfit", sans-serif;
     font-size: 16px;
   }
