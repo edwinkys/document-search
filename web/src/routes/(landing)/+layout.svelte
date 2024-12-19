@@ -46,7 +46,7 @@
 </div>
 
 <div class="w-full h-[80px]"></div>
-<header class="fixed top-0 w-full">
+<header class="fixed top-0">
   <div class="header-container">
     <Wordmark />
     <div class="desktop-menu space-x-2">
