@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from "$app/navigation"
   import { supabase } from "$lib"
   import { alerts } from "$lib/stores"
   import { validEmail } from "$lib/utils/validations"
@@ -10,7 +11,8 @@
     VisualRecognition,
     Chat,
     CicsSystemGroup,
-    Locked
+    Locked,
+    CheckmarkOutline
   } from "carbon-icons-svelte"
 
   let email: string = ""
@@ -71,6 +73,27 @@
       title: "Data privacy & isolation",
       description: `Your data is isolated from other projects in a dedicated
       storage and processing environment.`
+    }
+  ]
+
+  const pricing = [
+    {
+      name: "Founding",
+      price: "$50/mo",
+      description: "Exclusive pricing for early adopters",
+      features: [
+        "Unlimited documents",
+        "Unlimited searches",
+        "Bring your own LLM",
+        "Deploy to your own cloud",
+        "Project consultation",
+        "24/7 technical support"
+      ],
+      button: {
+        content: "Join waitlist",
+        type: "primary",
+        action: () => goto("/")
+      }
     }
   ]
 </script>
@@ -143,6 +166,40 @@
   </div>
 </section>
 
+<section id="pricing" class="section-container">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-9">
+    <h2>Pricing</h2>
+    <div class="flex flex-col space-y-4 md:col-span-2">
+      {#each pricing as plan}
+        <div class="pricing-card space-y-6">
+          <div class="flex flex-col space-y-1">
+            <div class="flex flex-row justify-between">
+              <h3>{plan.name}</h3>
+              <h3>{plan.price}</h3>
+            </div>
+            <small class="text-gray-500">{plan.description} </small>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {#each plan.features as feature}
+              <div class="flex flex-row space-x-2">
+                <span class="flex-none py-[2px] text-green-500">
+                  <CheckmarkOutline size={20} />
+                </span>
+                <p>{feature}</p>
+              </div>
+            {/each}
+          </div>
+          <Button
+            content={plan.button.content}
+            type={plan.button.type as "primary" | "secondary"}
+            action={plan.button.action}
+          />
+        </div>
+      {/each}
+    </div>
+  </div>
+</section>
+
 <style lang="postcss">
   .section-container {
     @apply container mx-auto px-6 py-12;
@@ -162,5 +219,9 @@
 
   .code-container::-webkit-scrollbar {
     display: none;
+  }
+
+  .pricing-card {
+    @apply flex flex-col p-6 rounded-lg bg-white;
   }
 </style>
