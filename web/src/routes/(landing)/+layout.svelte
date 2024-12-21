@@ -7,8 +7,7 @@
 
   const links = [
     { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "FAQs", href: "#faqs" }
+    { name: "Pricing", href: "#pricing" }
   ]
 
   const buttons = [

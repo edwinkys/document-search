@@ -200,6 +200,25 @@
   </div>
 </section>
 
+<section class="section-container large space-y-12">
+  <h2 class="md:text-center">How we extract PDFs</h2>
+  <div class="flex items-center justify-center">
+    <img
+      src="/images/pdf-extraction.png"
+      alt="Extraction Diagram"
+      class="lg:max-w-screen-md"
+    />
+  </div>
+  <div class="flex flex-col items-center">
+    <p class="max-w-screen-sm text-gray-500 md:text-center md:text-lg">
+      We employ multiple layers of extractions to ensure that we capture as much
+      information as possible from a PDF. This process includes extracting
+      features from the document as an image and as a text. We then store the
+      extracted embeddings in a vector index for quick retrieval.
+    </p>
+  </div>
+</section>
+
 <style lang="postcss">
   .section-container {
     @apply container mx-auto px-6 py-12;
