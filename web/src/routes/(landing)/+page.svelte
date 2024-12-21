@@ -12,7 +12,11 @@
     Chat,
     CicsSystemGroup,
     Locked,
-    CheckmarkOutline
+    CheckmarkOutline,
+    Db2Database,
+    Api_1,
+    FileStorage,
+    Process
   } from "carbon-icons-svelte"
 
   let email: string = ""
@@ -96,9 +100,16 @@
       }
     }
   ]
+
+  const components = [
+    { icon: Db2Database, title: "Postgres instance" },
+    { icon: Api_1, title: "API server" },
+    { icon: Process, title: "Extractor worker" },
+    { icon: FileStorage, title: "Storage bucket" }
+  ]
 </script>
 
-<section class="section-container large">
+<section class="section-container">
   <div class="max-w-screen-sm mx-auto">
     <div class="flex flex-col space-y-9 justify-center">
       <div class="flex flex-col space-y-6 md:text-center">
@@ -146,7 +157,7 @@
   </div>
 </section>
 
-<section id="features" class="section-container large space-y-9">
+<section id="features" class="section-container space-y-9">
   <div class="flex flex-col space-y-4 md:text-center">
     <small class="text-gray-500">Here's why you need to use DocuLens</small>
     <h2>Features</h2>
@@ -200,7 +211,7 @@
   </div>
 </section>
 
-<section class="section-container large space-y-12">
+<section class="section-container space-y-12">
   <h2 class="md:text-center">How we extract PDFs</h2>
   <div class="flex items-center justify-center">
     <img
@@ -219,14 +230,27 @@
   </div>
 </section>
 
+<section class="section-container space-y-9">
+  <h2 class="md:text-center">Each project includes</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    {#each components as component}
+      <div class="flex items-center p-4 space-x-4 bg-white rounded-lg">
+        <div class="flex p-2 bg-indigo-100 rounded-lg">
+          <component.icon size={24} class="text-indigo-600" />
+        </div>
+        <p class="text-xl">{component.title}</p>
+      </div>
+    {/each}
+  </div>
+  <p class="text-lg text-gray-500 md:text-center">
+    All dedicated only for your project!
+  </p>
+</section>
+
 <style lang="postcss">
   .section-container {
-    @apply container mx-auto px-6 py-12;
+    @apply container mx-auto px-6 py-24;
     @apply flex flex-col;
-  }
-
-  .section-container.large {
-    @apply py-24;
   }
 
   .code-container {
