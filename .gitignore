@@ -3,6 +3,11 @@ __pycache__/
 .venv/
 venv/
 
+# Rust
+debug/
+target/
+Cargo.lock
+
 # Node
 node_modules/
 build/
