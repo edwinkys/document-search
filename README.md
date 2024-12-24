@@ -83,3 +83,34 @@ python build.py
 This command will generate the HTML email templates in the build directory.
 Unfortunately, since Supabase doesn't have an API to update email templates, we
 have to manually copy the HTML email templates into the Supabase dashboard.
+
+## API Server
+
+This directory contains the source code for our API server that coordinates the
+document ingestion and retrieval workflows with the extractor workers. The API
+server is built with Rust and contains two server implementations: a REST API
+server and a gRPC server.
+
+- REST API Server (Axum): Interacts with the client and web application.
+- gRPC Server (Tonic): Interacts with the extractor workers.
+
+To run the API server locally, you can use the following commands:
+
+```bash
+cargo run start
+```
+
+### Style Guide
+
+When writing code for the API server, we should follow the standard Rust style
+guide. If you are not familiar, you can learn more about the style guide here:
+[Rust Style Guide](https://doc.rust-lang.org/style-guide). Additionally, we can
+run the following command to check for formatting and linting issues:
+
+```bash
+# Check for linting issues using Clippy.
+cargo clippy
+
+# Format the code using Rustfmt.
+cargo fmt
+```
