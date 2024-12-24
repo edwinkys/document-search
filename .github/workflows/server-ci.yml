@@ -17,6 +17,11 @@ jobs:
   ci:
     name: Test & Check Code Quality
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: server
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -32,13 +37,10 @@ jobs:
           sudo apt install -y protobuf-compiler libprotobuf-dev
 
       - name: Run Formatter
-        working-directory: server
         run: cargo fmt -- --check
 
       - name: Run Linter
-        working-directory: server
         run: cargo clippy -- -D warnings
 
       - name: Run Tests
-        working-directory: server
         run: cargo test -- --test-threads 1

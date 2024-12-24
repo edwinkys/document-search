@@ -17,16 +17,17 @@ jobs:
   ci:
     name: Check Code Quality
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: web
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: |
-          cd web
-          npm install
+        run: npm install
 
       - name: Run Linting & Formatting Check
-        run: |
-          cd web
-          npm run lint
+        run: npm run lint
