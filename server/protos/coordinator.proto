@@ -1,0 +1,19 @@
+syntax = "proto3";
+package coordinator;
+
+import "google/protobuf/empty.proto";
+
+// Coordinator service definition.
+//
+// The coordinator service is used to coordinate document ingestion and
+// retrieval workflows with the extractor workers. We choose gRPC for this
+// service because Protobuf provides effcient data transfer between the
+// coordinator and the workers.
+service Coordinator {
+    // Checks if the coordinator service is running.
+    rpc Heartbeat(google.protobuf.Empty) returns (HeartbeatResponse) {}
+}
+
+message HeartbeatResponse {
+    string version = 1;
+}

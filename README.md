@@ -87,12 +87,12 @@ have to manually copy the HTML email templates into the Supabase dashboard.
 ## API Server
 
 This directory contains the source code for our API server that coordinates the
-document ingestion and retrieval workflows with the extractor workers. The API
-server is built with Rust and contains two server implementations: a REST API
-server and a gRPC server.
+document ingestion and retrieval workflows with the clients and extractor
+workers. The server is built with Rust and contains two server implementations:
+a REST API server, **Interface**, and a gRPC server, **Coordinator**.
 
-- REST API Server (Axum): Interacts with the client and web application.
-- gRPC Server (Tonic): Interacts with the extractor workers.
+- Interface Server (Axum): Interacts with the client and web application.
+- Coordinator Server (Tonic): Interacts with the extractor workers.
 
 To run the API server locally, you can use the following commands:
 
