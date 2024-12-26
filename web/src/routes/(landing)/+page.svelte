@@ -83,7 +83,7 @@
   const pricing = [
     {
       name: "Founding",
-      price: "$50/mo",
+      price: "$500/mo",
       description: "Exclusive pricing for early adopters",
       features: [
         "Unlimited documents",
