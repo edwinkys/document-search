@@ -2,8 +2,10 @@
 #![allow(dead_code)]
 
 mod coordinator;
+pub mod interface;
 
 use crate::protos;
+use serde::Serialize;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 

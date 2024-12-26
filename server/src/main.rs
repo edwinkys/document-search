@@ -1,11 +1,13 @@
 mod protos;
 mod services;
 
+use axum::{routing, Router};
 use clap::{arg, ArgMatches, Command};
 use protos::coordinator_server::CoordinatorServer;
-use services::{Configuration, Service};
+use services::{interface, Configuration, Service};
 use std::env;
 use std::sync::Arc;
+use tokio::net::TcpListener;
 use tonic::transport::Server;
 
 // List of commands.
@@ -49,7 +51,13 @@ async fn start_handler(_args: &ArgMatches) {
         start_coordinator_server(coordinator_service).await;
     });
 
-    let _ = tokio::join!(coordinator_server);
+    // Start the interface server in a separate task.
+    let interface_service = service.clone();
+    let interface_server = tokio::spawn(async move {
+        start_interface_server(interface_service).await;
+    });
+
+    let _ = tokio::join!(coordinator_server, interface_server);
 }
 
 async fn start_coordinator_server(service: Arc<Service>) {
@@ -66,6 +74,26 @@ async fn start_coordinator_server(service: Arc<Service>) {
         .serve(addr)
         .await
         .expect("Failed to start the coordinator server");
+}
+
+async fn start_interface_server(service: Arc<Service>) {
+    let port = match env::var("DL_INTERFACE_PORT").ok() {
+        Some(port) => port.parse().expect("Invalid interface port"),
+        None => 2505,
+    };
+
+    let listener = TcpListener::bind(format!("[::]:{port}"))
+        .await
+        .expect("Failed to bind a listener");
+
+    let app = Router::new()
+        .route("/", routing::get(interface::get_root))
+        .with_state(service);
+
+    tracing::info!("The interface server is ready on port {port}");
+    axum::serve(listener, app)
+        .await
+        .expect("Failed to start the interface server");
 }
 
 fn migrate_command() -> Command {
