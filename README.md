@@ -16,7 +16,7 @@ local environment and install the necessary high-level dependencies such as:
 
 <!-- Add project components and their documentations below -->
 
-# `web`
+## Web
 
 This directory contains the source code for our web application which also
 includes our public-facing landing pages. The web application is built using
@@ -56,7 +56,7 @@ Please also follow the existing naming conventions and patterns:
 - Pascal Case: TypeScript classes and components
 - Uppercase: Constants and environment variables
 
-# `templates`
+## Templates
 
 This directory contains email templates that are used during authentication
 workflows in Supabase. We use Jinja2 templating to generate the email templates.
@@ -80,7 +80,7 @@ This command will generate the HTML email templates in the build directory.
 Unfortunately, since Supabase doesn't have an API to update email templates, we
 have to manually copy the HTML email templates into the Supabase dashboard.
 
-# `server`
+## Server
 
 This directory contains the source code for our API server that coordinates the
 document ingestion and retrieval workflows with the clients and extractor
