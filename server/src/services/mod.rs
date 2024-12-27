@@ -6,22 +6,35 @@ pub mod interface;
 
 use crate::protos;
 use serde::Serialize;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::PgPool;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
+use url::Url;
 
 #[derive(Debug, Clone)]
-pub struct Configuration {}
+pub struct Configuration {
+    pub database_url: Url,
+    pub pool_size: u16,
+}
 
 #[derive(Debug)]
 pub struct Service {
     config: Configuration,
+    pool: PgPool,
 }
 
 impl Service {
     /// Creates an instance of the service with the given configuration.
-    pub fn new(config: &Configuration) -> Self {
-        Service {
-            config: config.clone(),
-        }
+    pub async fn new(config: &Configuration) -> Self {
+        let config = config.clone();
+
+        let pool = PgPoolOptions::new()
+            .max_connections(config.pool_size as u32)
+            .connect(config.database_url.as_str())
+            .await
+            .expect("Failed to connect to the database");
+
+        Service { config, pool }
     }
 }

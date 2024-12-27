@@ -2,13 +2,17 @@ mod protos;
 mod services;
 
 use axum::{routing, Router};
-use clap::{arg, ArgMatches, Command};
+use clap::{ArgMatches, Command};
 use protos::coordinator_server::CoordinatorServer;
+use semver::Version;
 use services::{interface, Configuration, Service};
-use std::env;
+use sqlx::Connection;
+use sqlx::PgConnection;
 use std::sync::Arc;
+use std::{env, fs};
 use tokio::net::TcpListener;
 use tonic::transport::Server;
+use url::Url;
 
 // List of commands.
 // We do this to avoid using string literals in the code.
@@ -41,9 +45,33 @@ fn start_command() -> Command {
         .about("Start the server")
 }
 
+async fn configuration() -> Configuration {
+    let database_url = env::var("DL_DATABASE_URL")
+        .expect("Please set the DL_DATABASE_URL environment variable")
+        .parse::<Url>()
+        .expect("Invalid database URL");
+
+    let pool_size = match env::var("DL_POOL_SIZE").ok() {
+        Some(pool_size) => pool_size.parse().expect("Invalid pool size"),
+        None => 8,
+    };
+
+    Configuration {
+        database_url,
+        pool_size,
+    }
+}
+
 async fn start_handler(_args: &ArgMatches) {
-    let config = Configuration {};
-    let service = Arc::new(Service::new(&config));
+    let config = configuration().await;
+    let service = Arc::new(Service::new(&config).await);
+
+    // Check if the schema version matches the current version.
+    let current_version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
+    let schema_version = schema_version(&config.database_url).await;
+    if schema_version != Some(current_version) {
+        panic!("Please run the migrate command to update the schema.");
+    }
 
     // Start the coordinator server in a separate task.
     let coordinator_service = service.clone();
@@ -97,12 +125,109 @@ async fn start_interface_server(service: Arc<Service>) {
 }
 
 fn migrate_command() -> Command {
-    let arg_version = arg!(--version <version> "Schema version to migrate to")
-        .default_value(env!("CARGO_PKG_VERSION"));
-
     Command::new(MIGRATE_COMMAND)
-        .about("Migrate the database schema")
-        .arg(arg_version)
+        .about("Migrate the database schema to the latest version")
 }
 
-async fn migrate_handler(_args: &ArgMatches) {}
+async fn migrate_handler(_args: &ArgMatches) {
+    tracing::info!("Migrating the database schema...");
+
+    let database_url = env::var("DL_DATABASE_URL")
+        .expect("Please set the DL_DATABASE_URL environment variable")
+        .parse::<Url>()
+        .expect("Invalid database URL");
+
+    let target_version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
+    let schema_version = schema_version(&database_url)
+        .await
+        .unwrap_or("0.0.0".parse::<Version>().unwrap());
+
+    if schema_version == target_version {
+        tracing::info!("The database schema is up-to-date");
+        return;
+    }
+
+    // List the migration scripts that need to be applied.
+    let mut migrations = fs::read_dir("migrations")
+        .expect("Failed to read the migrations directory")
+        .filter_map(|entry| {
+            let entry = entry.expect("Failed to read a directory entry");
+            if entry.path().is_dir() {
+                return None;
+            }
+
+            let _filename = entry.file_name();
+            let filename = _filename.to_str().unwrap();
+            if !filename.ends_with(".sql") {
+                return None;
+            }
+
+            let _version = filename.split_at(filename.len() - 4).0;
+            let version = Version::parse(_version).ok()?;
+            match version <= schema_version || version > target_version {
+                true => None,
+                false => Some(version),
+            }
+        })
+        .collect::<Vec<Version>>();
+
+    migrations.sort_unstable();
+    for migration in migrations.iter() {
+        let path = format!("migrations/{}.sql", migration);
+        let script = fs::read_to_string(&path)
+            .expect("Failed to read the migration script");
+
+        tracing::info!("Applying the migration script:\n\n{script}");
+
+        let mut conn = PgConnection::connect(database_url.as_str())
+            .await
+            .expect("Failed to connect to the database");
+
+        sqlx::raw_sql(&script)
+            .execute(&mut conn)
+            .await
+            .expect("Failed to execute the migration script");
+
+        sqlx::query("UPDATE version SET version = $1")
+            .bind(migration.to_string())
+            .execute(&mut conn)
+            .await
+            .expect("Failed to update the schema version");
+
+        tracing::info!("Migrated the database schema to version {}", migration);
+    }
+}
+
+async fn schema_version(url: &Url) -> Option<Version> {
+    tracing::info!("Checking for the database schema version...");
+
+    let mut conn = PgConnection::connect(url.as_str())
+        .await
+        .expect("Failed to connect to the database");
+
+    let table_exists: bool = sqlx::query_scalar(
+        "SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.tables
+            WHERE table_name = 'version'
+        )",
+    )
+    .fetch_one(&mut conn)
+    .await
+    .expect("Failed to check if the version table exists");
+
+    if !table_exists {
+        tracing::warn!("The version table does not exist");
+        return None;
+    }
+
+    let version: Option<String> =
+        sqlx::query_scalar("SELECT version FROM version")
+            .fetch_optional(&mut conn)
+            .await
+            .expect("Failed to fetch the schema version");
+
+    version.map(|version| {
+        Version::parse(&version).expect("Unable to parse the schema version")
+    })
+}
