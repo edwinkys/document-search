@@ -14,22 +14,13 @@ These are some things you might need to have installed locally:
 - [Python](https://python.org/downloads)
 - [Rust](https://rust-lang.org/tools/install)
 
-Additionally, you might want to set up a Python virtual environment:
-
-```bash
-# Create a virtual environment.
-python -m venv .venv
-
-# Activate the virtual environment.
-source .venv/bin/activate
-
-# Install the Python dependencies.
-pip install -r requirements.txt
-```
-
 <!-- Add project components and their documentations below -->
 
 ## Web Application
+
+```bash
+cd web
+```
 
 This directory contains the source code for our web application which also
 includes our public-facing landing pages. The web application is built using
@@ -68,13 +59,29 @@ Please also follow the existing naming conventions and patterns:
 
 ## Email Templates
 
+```bash
+cd templates
+```
+
 This directory contains email templates that are used during authentication
 workflows in Supabase. We use Jinja2 templating to generate the email templates.
 If we want to modify the email templates, we can do so by modifying the Jinja2
 templates in the emails directory.
 
-After modifying the Jinja2 templates, run the following command to compile them
-into HTML.
+Before starting, you might want to set up a Python virtual environment:
+
+```bash
+# Create a virtual environment.
+python -m venv .venv
+
+# Activate the virtual environment.
+source .venv/bin/activate
+
+# Install the Python dependencies.
+pip install -r requirements.txt
+```
+
+We can run the following command to compile the templates into HTML.
 
 ```bash
 python build.py
@@ -85,6 +92,10 @@ Unfortunately, since Supabase doesn't have an API to update email templates, we
 have to manually copy the HTML email templates into the Supabase dashboard.
 
 ## API Server
+
+```bash
+cd server
+```
 
 This directory contains the source code for our API server that coordinates the
 document ingestion and retrieval workflows with the clients and extractor
