@@ -97,6 +97,10 @@ a REST API server, **Interface**, and a gRPC server, **Coordinator**.
 To run the API server locally, you can use the following commands:
 
 ```bash
+# Run the setup script for local development.
+make setup
+
+# Run the API server.
 cargo run start
 ```
 
