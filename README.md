@@ -6,9 +6,9 @@ are search engines for academic research papers or internal knowledge base
 chatbots. At a high level, we have two main workflows in our system:
 **Ingestion** and **Retrieval**.
 
-This is a monorepo that contains the source code for our internal components.
-
-These are some things you might need to have installed locally:
+This repository is a monorepo that contains the source code for our internal
+components. Before starting with the development, you might want to set up your
+local environment and install the necessary high-level dependencies such as:
 
 - [Node.js](https://nodejs.org/en/download/package-manager)
 - [Python](https://python.org/downloads)
@@ -16,11 +16,7 @@ These are some things you might need to have installed locally:
 
 <!-- Add project components and their documentations below -->
 
-## Web Application
-
-```bash
-cd web
-```
+# `web`
 
 This directory contains the source code for our web application which also
 includes our public-facing landing pages. The web application is built using
@@ -28,8 +24,11 @@ TypeScript, SvelteKit and TailwindCSS. To run this project locally for
 development, you can use the following commands:
 
 ```bash
-# Install the project dependencies.
-npm install
+# Set up the web app for local development.
+make setup_web
+
+# Change the directory to the web app.
+cd web
 
 # Run the web app on localhost:5173.
 npm run dev
@@ -57,33 +56,23 @@ Please also follow the existing naming conventions and patterns:
 - Pascal Case: TypeScript classes and components
 - Uppercase: Constants and environment variables
 
-## Email Templates
-
-```bash
-cd templates
-```
+# `templates`
 
 This directory contains email templates that are used during authentication
 workflows in Supabase. We use Jinja2 templating to generate the email templates.
 If we want to modify the email templates, we can do so by modifying the Jinja2
 templates in the emails directory.
 
-Before starting, you might want to set up a Python virtual environment:
+We can run the following command to start working on the email templates:
 
 ```bash
-# Create a virtual environment.
-python -m venv .venv
+# Set up the email templates directory for local development.
+make setup_templates
 
-# Activate the virtual environment.
-source .venv/bin/activate
+# Change the directory to the email templates.
+cd templates
 
-# Install the Python dependencies.
-pip install -r requirements.txt
-```
-
-We can run the following command to compile the templates into HTML.
-
-```bash
+# Generate the HTML email templates.
 python build.py
 ```
 
@@ -91,11 +80,7 @@ This command will generate the HTML email templates in the build directory.
 Unfortunately, since Supabase doesn't have an API to update email templates, we
 have to manually copy the HTML email templates into the Supabase dashboard.
 
-## API Server
-
-```bash
-cd server
-```
+# `server`
 
 This directory contains the source code for our API server that coordinates the
 document ingestion and retrieval workflows with the clients and extractor
@@ -105,11 +90,14 @@ a REST API server, **Interface**, and a gRPC server, **Coordinator**.
 - Interface Server (Axum): Interacts with the client and web application.
 - Coordinator Server (Tonic): Interacts with the extractor workers.
 
-To run the API server locally, you can use the following commands:
+To start working on the API server locally, you can use the following commands:
 
 ```bash
-# Run the setup script for local development.
-make setup
+# Run the server setup script for local development.
+make setup_server
+
+# Change the directory to the server.
+cd server
 
 # Run the API server.
 cargo run start

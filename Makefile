@@ -13,8 +13,14 @@ all:
 	@echo "$(BOLD)Usage$(RESET): make <target>"
 	@echo ""
 	@echo "$(BOLD)Available Target$(RESET)"
-	@echo "  - setup: Setup development environment"
 	@echo "  - teardown: Teardown development environment"
+	@echo ""
+	@echo "Setup:"
+	@echo "  - setup_server: Set up server environment"
+	@echo "  - setup_templates: Set up templates environment"
+	@echo "  - setup_web: Set up web application environment"
+	@echo ""
+	@echo "Postgres:"
 	@echo "  - pull_postgres: Pull Postgres Docker image"
 	@echo "  - run_postgres: Run Postgres Docker container"
 	@echo "  - stop_postgres: Stop Postgres Docker container"
@@ -43,8 +49,8 @@ stop_postgres:
 	@docker rm dl-postgres
 	@echo "$(GREEN)Postgres Docker container stopped and removed.$(RESET)"
 
-.PHONY: setup
-setup:
+.PHONY: setup_server
+setup_server:
 	@$(MAKE) pull_postgres
 	@$(MAKE) run_postgres
 
@@ -52,6 +58,26 @@ setup:
 	@echo "DL_DATABASE_URL=$(DATABASE_URL)" > server/.env
 
 	@echo "$(GREEN)Environment setup complete.$(RESET)"
+
+.PHONY: setup_templates
+setup_templates:
+	@echo "Setting up templates directory..."
+	@cd templates && \
+	python3 -m venv .venv && \
+	source .venv/bin/activate && \
+	pip install -r requirements.txt
+
+	@echo "$(GREEN)Templates directory setup complete.$(RESET)"
+
+.PHONY: setup_web
+setup_web:
+	@echo "Setting up web application..."
+	@cd web && \
+	npm install
+
+	@cp web/.env.example web/.env
+	@echo "$(GREEN)Web application setup complete:$(RESET)"
+	@echo "Please update the .env file with the correct values."
 
 .PHONY: teardown
 teardown:
