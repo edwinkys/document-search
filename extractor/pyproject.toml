@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "dl-extractor"
+version = "0.1.0"
+description = "An extractor worker to extract PDFs for DocuLens."
+authors = ["Edwin Kys"]
+packages = [{ include = "src", from = "." }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -2,6 +2,7 @@
 __pycache__/
 .venv/
 venv/
+poetry.lock
 
 # Rust
 debug/
@@ -14,6 +15,7 @@ build/
 .output/
 .vercel/
 .svelte-kit/
+package-lock.json
 
 # Environment
 .env
