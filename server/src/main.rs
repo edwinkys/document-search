@@ -45,7 +45,7 @@ fn start_command() -> Command {
         .about("Start the server")
 }
 
-async fn configuration() -> Configuration {
+fn configuration() -> Configuration {
     let database_url = env::var("DL_DATABASE_URL")
         .expect("Please set the DL_DATABASE_URL environment variable")
         .parse::<Url>()
@@ -63,7 +63,7 @@ async fn configuration() -> Configuration {
 }
 
 async fn start_handler(_args: &ArgMatches) {
-    let config = configuration().await;
+    let config = configuration();
     let service = Arc::new(Service::new(&config).await);
 
     // Check if the schema version matches the current version.

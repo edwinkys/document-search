@@ -1,3 +1,6 @@
+// NOTE: If we modify this file, we need to update the stubs by running:
+// make generate_rpc_stubs
+
 syntax = "proto3";
 package coordinator;
 
@@ -12,8 +15,16 @@ import "google/protobuf/empty.proto";
 service Coordinator {
     // Checks if the coordinator service is running.
     rpc Heartbeat(google.protobuf.Empty) returns (HeartbeatResponse) {}
+
+    // Adds an extraction worker to the coordinator service.
+    rpc RegisterWorker(RegisterWorkerRequest) returns (google.protobuf.Empty) {}
 }
 
 message HeartbeatResponse {
     string version = 1;
+}
+
+message RegisterWorkerRequest {
+    string id = 1;
+    string address = 2;
 }

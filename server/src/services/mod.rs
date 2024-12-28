@@ -18,6 +18,17 @@ pub struct Configuration {
     pub pool_size: u16,
 }
 
+#[cfg(test)]
+impl Default for Configuration {
+    fn default() -> Self {
+        let database = "postgres://postgres:password@localhost:5432/postgres";
+        Configuration {
+            database_url: Url::parse(database).unwrap(),
+            pool_size: 4,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Service {
     config: Configuration,
