@@ -1,15 +1,22 @@
 import os
 import asyncio
 from multiprocessing import Process
+from rich.console import Console
 from typer import Typer
 from uvicorn import run
 from src.core.loop import async_loop
 
 cli = Typer(help="Interface to manage the extractor worker.")
+console = Console()
 
 
 def start_loop():
-    asyncio.run(async_loop())
+    try:
+        asyncio.run(async_loop())
+    except KeyboardInterrupt:
+        console.print(" | Keyboard interruption detected. Stopping...")
+        console.log("INFO: The extraction loop has been stopped", style="green")
+        pass
 
 
 def start_api():
