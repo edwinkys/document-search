@@ -3,7 +3,7 @@ import asyncio
 from multiprocessing import Process
 from typer import Typer
 from uvicorn import run
-from src.loop import async_loop
+from src.core.loop import async_loop
 
 cli = Typer(help="Interface to manage the extractor worker.")
 
@@ -14,7 +14,7 @@ def start_loop():
 
 def start_api():
     port = int(os.getenv("DL_EXTRACTOR_PORT", 2510))
-    run("src.api:api", host="0.0.0.0", port=port, reload=False)
+    run("src.core.api:api", host="0.0.0.0", port=port, reload=False)
 
 
 @cli.command()

@@ -14,17 +14,18 @@ all:
 	@echo ""
 	@echo "$(BOLD)Available Target$(RESET)"
 	@echo "  - teardown: Teardown development environment"
+	@echo "  - generate_rpc_stubs: Generate RPC stubs for clients"
+	@echo ""
+	@echo "Postgres:"
+	@echo "  - pull_postgres: Pull Postgres image from Docker Hub"
+	@echo "  - run_postgres: Run Postgres Docker container"
+	@echo "  - stop_postgres: Stop the running Postgres container"
 	@echo ""
 	@echo "Setup Scripts:"
 	@echo "  - setup_server"
 	@echo "  - setup_templates"
 	@echo "  - setup_web"
 	@echo "  - setup_extractor"
-	@echo ""
-	@echo "Postgres:"
-	@echo "  - pull_postgres: Pull Postgres image from Docker Hub"
-	@echo "  - run_postgres: Run Postgres Docker container"
-	@echo "  - stop_postgres: Stop the running Postgres container"
 
 .PHONY: pull_postgres
 pull_postgres:
@@ -93,3 +94,16 @@ setup_extractor:
 teardown:
 	@$(MAKE) stop_postgres
 	@echo "$(GREEN)Environment teardown complete.$(RESET)"
+
+.PHONY: generate_rpc_stubs
+generate_rpc_stubs:
+	@echo "Generating RPC stubs..."
+	@python -m pip install grpcio-tools
+	@mkdir -p extractor/src/stubs
+	@touch extractor/src/stubs/__init__.py
+	@python -m grpc_tools.protoc -I./server/protos \
+	--python_out=./extractor/src/stubs \
+	--grpc_python_out=./extractor/src/stubs \
+	./server/protos/*.proto
+
+	@echo "$(GREEN)RPC stubs generated.$(RESET)"
