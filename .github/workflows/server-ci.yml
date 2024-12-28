@@ -36,6 +36,9 @@ jobs:
           sudo apt update && sudo apt upgrade -y
           sudo apt install -y protobuf-compiler libprotobuf-dev
 
+      - name: Setup Local Environment
+        run: cd .. && make setup_server
+
       - name: Run Formatter
         run: cargo fmt -- --check
 
