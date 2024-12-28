@@ -15,22 +15,24 @@ all:
 	@echo "$(BOLD)Available Target$(RESET)"
 	@echo "  - teardown: Teardown development environment"
 	@echo ""
-	@echo "Setup:"
-	@echo "  - setup_server: Set up server environment"
-	@echo "  - setup_templates: Set up templates environment"
-	@echo "  - setup_web: Set up web application environment"
+	@echo "Setup Scripts:"
+	@echo "  - setup_server"
+	@echo "  - setup_templates"
+	@echo "  - setup_web"
+	@echo "  - setup_extractor"
 	@echo ""
 	@echo "Postgres:"
-	@echo "  - pull_postgres: Pull Postgres Docker image"
+	@echo "  - pull_postgres: Pull Postgres image from Docker Hub"
 	@echo "  - run_postgres: Run Postgres Docker container"
-	@echo "  - stop_postgres: Stop Postgres Docker container"
+	@echo "  - stop_postgres: Stop the running Postgres container"
 
 .PHONY: pull_postgres
 pull_postgres:
-	@echo "Pulling Postgres Docker image..."
+	@echo "Pulling Postgres image from Docker Hub..."
 	@docker pull postgres:latest
 	@docker tag postgres:latest dl-postgres:latest
-	@echo "$(GREEN)Postgres Docker image pulled successfully.$(RESET)"
+	@echo "$(GREEN)Postgres image pulled successfully as:$(RESET)"
+	@echo "dl-postgres:latest"
 
 .PHONY: run_postgres
 run_postgres:
@@ -39,7 +41,7 @@ run_postgres:
 	-e POSTGRES_PASSWORD=password \
 	-p 5432:5432 dl-postgres:latest
 
-	@echo "$(GREEN)Postgres Docker container is running:$(RESET)"
+	@echo "$(GREEN)Postgres Docker container is running on:$(RESET)"
 	@echo "$(DATABASE_URL)"
 
 .PHONY: stop_postgres
@@ -51,13 +53,12 @@ stop_postgres:
 
 .PHONY: setup_server
 setup_server:
+	@echo "Setting up server environment..."
 	@$(MAKE) pull_postgres
 	@$(MAKE) run_postgres
-
 	@touch server/.env
 	@echo "DL_DATABASE_URL=$(DATABASE_URL)" > server/.env
-
-	@echo "$(GREEN)Environment setup complete.$(RESET)"
+	@echo "$(GREEN)Server environment setup complete.$(RESET)"
 
 .PHONY: setup_templates
 setup_templates:
@@ -67,17 +68,26 @@ setup_templates:
 	source .venv/bin/activate && \
 	pip install -r requirements.txt
 
-	@echo "$(GREEN)Templates directory setup complete.$(RESET)"
+	@echo "$(GREEN)Templates environment setup complete.$(RESET)"
 
 .PHONY: setup_web
 setup_web:
-	@echo "Setting up web application..."
+	@echo "Setting up web application environment..."
 	@cd web && \
 	npm install
 
 	@cp web/.env.example web/.env
-	@echo "$(GREEN)Web application setup complete:$(RESET)"
+	@echo "$(GREEN)Web environment setup complete:$(RESET)"
 	@echo "Please update the .env file with the correct values."
+
+.PHONY: setup_extractor
+setup_extractor:
+	@echo "Setting up extractor environment..."
+	@cd extractor && \
+	poetry config virtualenvs.in-project true && \
+	poetry install
+
+	@echo "$(GREEN)Extractor environment setup complete.$(RESET)"
 
 .PHONY: teardown
 teardown:

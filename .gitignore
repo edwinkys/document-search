@@ -1,8 +1,10 @@
 # Python
 __pycache__/
+.pytest_cache/
 .venv/
 venv/
 poetry.lock
+pyrightconfig.json
 
 # Rust
 debug/

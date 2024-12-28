@@ -119,3 +119,49 @@ cargo fmt
 ```
 
 ## Extractor
+
+This directory contains the source code for our extractor workers which are
+responsible to extract features from PDF documents. An extractor worker consists
+of 2 processes running in concurrently: **Extraction Loop** and **Embedding
+Generator**.
+
+- Extraction Loop: Extracts features from the PDF documents during ingestion.
+- Embedding Generator: Generates embeddings for the retrieval workflow.
+
+To get started with developing the extractor, use the following commands:
+
+```bash
+# Install Poetry if you haven't already.
+pip install poetry
+
+# Run the extractor setup script.
+make setup_extractor
+
+# Change the directory to the extractor.
+cd extractor
+
+# Get instructions to run the extractor.
+poetry run cli --help
+```
+
+### Style Guide
+
+The extractor is written in Python and we should follow the PEP 8 style guide
+when writing code for the extractor. If you are not familiar, you can learn more
+about the style guide here: [PEP 8 Style Guide](https://pep8.org). Additionally,
+please follow the existing naming conventions and patterns:
+
+- Snake Case: Variables, functions, files, and modules
+- Pascal Case: Classes
+- Uppercase: Constants and environment variables
+
+Note: Camel case and kebab case should be avoided in the extractor.
+
+We use Black to format our Python code and we can run a command to format the
+code automatically. Please make sure to run this command before committing your
+changes. Also, please note that this command doesn't fix issues related with the
+naming conventions.
+
+```bash
+poetry run black .
+```
