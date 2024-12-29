@@ -1,13 +1,15 @@
 import os
 import asyncio
+from dotenv import load_dotenv
 from multiprocessing import Process
 from rich.console import Console
 from typer import Typer
 from uvicorn import run
 from src.core.loop import async_loop
 
-cli = Typer(help="Interface to manage the extractor worker.")
+load_dotenv()
 console = Console()
+cli = Typer(help="Interface to manage the extractor worker.")
 
 
 def start_loop():

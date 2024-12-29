@@ -1,9 +1,11 @@
 mod protos;
 mod services;
+mod types;
 
 use axum::{routing, Router};
 use clap::{ArgMatches, Command};
 use protos::coordinator_server::CoordinatorServer;
+use reqwest::ClientBuilder;
 use semver::Version;
 use services::{interface, Configuration, Service};
 use sqlx::Connection;
@@ -11,7 +13,9 @@ use sqlx::PgConnection;
 use std::sync::Arc;
 use std::{env, fs};
 use tokio::net::TcpListener;
+use tokio::time::{sleep, Duration};
 use tonic::transport::Server;
+use types::WorkerID;
 use url::Url;
 
 // List of commands.
@@ -85,7 +89,16 @@ async fn start_handler(_args: &ArgMatches) {
         start_interface_server(interface_service).await;
     });
 
-    let _ = tokio::join!(coordinator_server, interface_server);
+    let worker_validator_service = service.clone();
+    let worker_validator_loop = tokio::spawn(async move {
+        start_worker_validator_loop(worker_validator_service).await;
+    });
+
+    let _ = tokio::join!(
+        coordinator_server,
+        interface_server,
+        worker_validator_loop
+    );
 }
 
 async fn start_coordinator_server(service: Arc<Service>) {
@@ -122,6 +135,40 @@ async fn start_interface_server(service: Arc<Service>) {
     axum::serve(listener, app)
         .await
         .expect("Failed to start the interface server");
+}
+
+/// Starts a loop that validates connected workers.
+///
+/// This loop will fetch the list of workers from the service on a regular
+/// interval and validate the connection to each worker by calling a health
+/// check endpoint on the worker.
+async fn start_worker_validator_loop(service: Arc<Service>) {
+    loop {
+        sleep(Duration::from_secs(10)).await;
+
+        let mut missing_workers: Vec<WorkerID> = Vec::new();
+        let workers = service.workers().await;
+
+        for worker in workers.iter() {
+            let client = ClientBuilder::new()
+                .timeout(Duration::from_secs(3))
+                .build()
+                .expect("Failed to create a HTTP client");
+
+            let url = format!("http://{}", worker.address);
+            let response = client.get(url).send().await;
+            if response.is_err() {
+                missing_workers.push(worker.id);
+            }
+        }
+
+        if !missing_workers.is_empty() {
+            let n = missing_workers.len();
+            tracing::warn!("Detected {n} missing worker(s). Removing...");
+            service.remove_workers(&missing_workers).await;
+            tracing::info!("Successfully removed {n} missing worker(s)");
+        }
+    }
 }
 
 fn migrate_command() -> Command {

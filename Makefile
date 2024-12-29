@@ -5,6 +5,7 @@ RESET := \033[0m
 
 # Default configuration for local development.
 DATABASE_URL=postgres://postgres:password@localhost:5432/postgres
+EXTRACTOR_HOST=0.0.0.0
 
 .PHONY: all
 all:
@@ -88,6 +89,8 @@ setup_extractor:
 	poetry config virtualenvs.in-project true && \
 	poetry install
 
+	@touch extractor/.env
+	@echo "DL_EXTRACTOR_HOST=$(EXTRACTOR_HOST)" > extractor/.env
 	@echo "$(GREEN)Extractor environment setup complete.$(RESET)"
 
 .PHONY: teardown
