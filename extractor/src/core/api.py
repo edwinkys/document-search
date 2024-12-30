@@ -18,6 +18,6 @@ api.add_middleware(CORSMiddleware, **CORS)
 
 
 @api.get("/")
-async def get_root():
+async def heartbeat():
     version = importlib.metadata.version("dl-extractor")
     return JSONResponse(content={"version": version})
