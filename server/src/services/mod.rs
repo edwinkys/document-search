@@ -6,16 +6,18 @@ pub mod interface;
 
 use crate::protos;
 use crate::types::*;
-use serde::Serialize;
+use axum::http::StatusCode;
+use interface::ErrorResponse;
+use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tonic::{Request, Response, Status};
 use url::Url;
 
 #[derive(Debug, Clone)]
 pub struct Configuration {
+    pub secret: String,
     pub database_url: Url,
     pub pool_size: u16,
 }
@@ -25,6 +27,7 @@ impl Default for Configuration {
     fn default() -> Self {
         let database = "postgres://postgres:password@localhost:5432/postgres";
         Configuration {
+            secret: "secretkey".to_string(),
             database_url: Url::parse(database).unwrap(),
             pool_size: 2,
         }
@@ -52,6 +55,19 @@ impl Service {
             workers: Mutex::new(Vec::new()),
             pool,
         }
+    }
+
+    /// Validates the authorization secret from the request.
+    pub fn validate_secret(&self, secret: &str) -> Result<(), ErrorResponse> {
+        if secret != self.config.secret {
+            return Err(ErrorResponse {
+                code: StatusCode::UNAUTHORIZED,
+                message: String::from("Please provide a valid secret key."),
+                solution: None,
+            });
+        }
+
+        Ok(())
     }
 
     /// Adds a worker to the list of workers if it doesn't already exist.

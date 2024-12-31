@@ -9,9 +9,10 @@ clap = "4.5.23"
 
 # Server
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
+axum = { version = "0.7.9", features = ["multipart"] }
+axum-extra = { version = "0.9.6", features = ["typed-header"] }
 tonic = "0.12.3"
 prost = "0.13.4"
-axum = "0.7.9"
 
 # Tracing
 tracing = "0.1.41"

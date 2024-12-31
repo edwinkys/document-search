@@ -1,5 +1,6 @@
 use super::*;
 use protos::coordinator_server::Coordinator;
+use tonic::{Request, Response, Status};
 
 #[tonic::async_trait]
 impl Coordinator for Arc<Service> {

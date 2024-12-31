@@ -50,6 +50,9 @@ fn start_command() -> Command {
 }
 
 fn configuration() -> Configuration {
+    let secret = env::var("DL_SECRET_KEY")
+        .expect("Please set the DL_SECRET_KEY environment variable");
+
     let database_url = env::var("DL_DATABASE_URL")
         .expect("Please set the DL_DATABASE_URL environment variable")
         .parse::<Url>()
@@ -61,6 +64,7 @@ fn configuration() -> Configuration {
     };
 
     Configuration {
+        secret,
         database_url,
         pool_size,
     }
@@ -128,7 +132,7 @@ async fn start_interface_server(service: Arc<Service>) {
         .expect("Failed to bind a listener");
 
     let app = Router::new()
-        .route("/", routing::get(interface::get_root))
+        .route("/", routing::get(interface::heartbeat))
         .with_state(service);
 
     tracing::info!("The interface server is ready on port {port}");
