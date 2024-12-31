@@ -106,8 +106,7 @@ impl Service {
             solution: Some(String::from("Please contact the support team.")),
         })?;
 
-        // TODO: Implement the rest of the function.
-
+        namespace.provision(&self.pool).await?;
         Ok(namespace)
     }
 }

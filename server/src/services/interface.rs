@@ -5,6 +5,7 @@ use axum::http::Response;
 use axum::response::IntoResponse;
 use axum_extra::headers::authorization::{Authorization, Bearer};
 use axum_extra::TypedHeader;
+use regex::bytes::Regex;
 use serde_json::json;
 
 pub struct SuccessResponse<T: Serialize> {
@@ -60,7 +61,22 @@ pub async fn create_namespace(
     Json(payload): Json<CreateNamespaceRequest>,
 ) -> Result<SuccessResponse<Namespace>, ErrorResponse> {
     service.validate_secret(bearer.token())?;
+
+    // Validate the namespace name.
+    let re = Regex::new(r"^[a-z_]+$").unwrap();
+    if !re.is_match(payload.name.as_bytes()) {
+        return Err(ErrorResponse {
+            code: StatusCode::BAD_REQUEST,
+            message: "Invalid name for a namespace".to_string(),
+            solution: Some(String::from(
+                "A namespace must be lowercase letters with underscores.",
+            )),
+        });
+    }
+
     let namespace = service.create_namespace(&payload.name).await?;
+    tracing::info!("A new namespace is created: {}", &namespace.name);
+
     Ok(SuccessResponse {
         code: StatusCode::CREATED,
         data: namespace,
@@ -113,8 +129,8 @@ mod tests {
                 .unwrap();
 
         for namespace in namespaces {
-            let name = namespace.name;
-            let q = format!("DROP SCHEMA IF EXISTS {name} CASCADE");
+            let schema = namespace.schema();
+            let q = format!("DROP SCHEMA IF EXISTS {schema} CASCADE");
             sqlx::query(q.as_str()).execute(&state.pool).await.unwrap();
         }
 

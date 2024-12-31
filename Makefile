@@ -3,6 +3,9 @@ GREEN := \033[0;32m
 BOLD := \033[1m
 RESET := \033[0m
 
+# Some setup variables.
+POSTGRES_IMAGE=pgvector/pgvector:pg17
+
 # Default configuration for local development.
 SECRET_KEY=secretkey
 DATABASE_URL=postgres://postgres:password@localhost:5432/postgres
@@ -32,8 +35,8 @@ all:
 .PHONY: pull_postgres
 pull_postgres:
 	@echo "Pulling Postgres image from Docker Hub..."
-	@docker pull postgres:latest
-	@docker tag postgres:latest dl-postgres:latest
+	@docker pull $(POSTGRES_IMAGE)
+	@docker tag $(POSTGRES_IMAGE) dl-postgres:latest
 	@echo "$(GREEN)Postgres image pulled successfully as:$(RESET)"
 	@echo "dl-postgres:latest"
 
@@ -59,9 +62,12 @@ setup_server:
 	@echo "Setting up server environment..."
 	@$(MAKE) pull_postgres
 	@$(MAKE) run_postgres
+
 	@touch server/.env
 	@echo "DL_DATABASE_URL=$(DATABASE_URL)" > server/.env
 	@echo "DL_SECRET_KEY=$(SECRET_KEY)" >> server/.env
+
+	@cd server && cargo run migrate
 	@echo "$(GREEN)Server environment setup complete.$(RESET)"
 
 .PHONY: setup_templates

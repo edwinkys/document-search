@@ -30,6 +30,7 @@ dotenv = "0.15.0"
 url = "2.5.4"
 semver = "1.0.24"
 reqwest = "0.12.11"
+regex = "1.11.1"
 
 [dependencies.sqlx]
 version = "0.8.2"
