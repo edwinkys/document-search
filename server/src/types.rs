@@ -1,4 +1,7 @@
 use crate::protos;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 use std::net::SocketAddr;
 use tonic::Status;
 use uuid::Uuid;
@@ -28,4 +31,11 @@ impl TryFrom<protos::RegisterWorkerRequest> for Worker {
 
         Ok(Worker { id, address })
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct Namespace {
+    pub id: Uuid,
+    pub name: String,
+    pub created_at: DateTime<Utc>,
 }

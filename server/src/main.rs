@@ -133,6 +133,7 @@ async fn start_interface_server(service: Arc<Service>) {
 
     let app = Router::new()
         .route("/", routing::get(interface::heartbeat))
+        .route("/namespaces", routing::post(interface::create_namespace))
         .with_state(service);
 
     tracing::info!("The interface server is ready on port {port}");

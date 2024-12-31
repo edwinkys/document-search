@@ -1,6 +1,3 @@
-// TODO: Remove this once the service is implemented.
-#![allow(dead_code)]
-
 mod coordinator;
 pub mod interface;
 
@@ -89,5 +86,28 @@ impl Service {
     /// Returns a list of all workers.
     pub async fn workers(&self) -> Vec<Worker> {
         self.workers.lock().await.clone()
+    }
+
+    pub async fn create_namespace(
+        &self,
+        name: &str,
+    ) -> Result<Namespace, ErrorResponse> {
+        let namespace: Namespace = sqlx::query_as(
+            "INSERT INTO namespaces (name)
+            VALUES ($1)
+            RETURNING *;",
+        )
+        .bind(name)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|_| ErrorResponse {
+            code: StatusCode::BAD_REQUEST,
+            message: String::from("Failed to create a new namespace."),
+            solution: Some(String::from("Please contact the support team.")),
+        })?;
+
+        // TODO: Implement the rest of the function.
+
+        Ok(namespace)
     }
 }

@@ -4,6 +4,7 @@ BOLD := \033[1m
 RESET := \033[0m
 
 # Default configuration for local development.
+SECRET_KEY=secretkey
 DATABASE_URL=postgres://postgres:password@localhost:5432/postgres
 EXTRACTOR_HOST=0.0.0.0
 
@@ -60,6 +61,7 @@ setup_server:
 	@$(MAKE) run_postgres
 	@touch server/.env
 	@echo "DL_DATABASE_URL=$(DATABASE_URL)" > server/.env
+	@echo "DL_SECRET_KEY=$(SECRET_KEY)" >> server/.env
 	@echo "$(GREEN)Server environment setup complete.$(RESET)"
 
 .PHONY: setup_templates
