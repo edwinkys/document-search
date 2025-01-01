@@ -2,12 +2,12 @@ mod protos;
 mod services;
 mod types;
 
-use axum::{routing, Router};
 use clap::{ArgMatches, Command};
 use protos::coordinator_server::CoordinatorServer;
 use reqwest::ClientBuilder;
 use semver::Version;
-use services::{interface, Configuration, Service};
+use services::interface::create_router;
+use services::{Configuration, Service};
 use sqlx::Connection;
 use sqlx::PgConnection;
 use std::sync::Arc;
@@ -131,12 +131,9 @@ async fn start_interface_server(service: Arc<Service>) {
         .await
         .expect("Failed to bind a listener");
 
-    let app = Router::new()
-        .route("/", routing::get(interface::heartbeat))
-        .route("/namespaces", routing::post(interface::create_namespace))
-        .with_state(service);
-
+    let app = create_router(service);
     tracing::info!("The interface server is ready on port {port}");
+
     axum::serve(listener, app)
         .await
         .expect("Failed to start the interface server");

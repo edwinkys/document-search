@@ -8,8 +8,8 @@ use std::net::SocketAddr;
 use tonic::Status;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct WorkerID(pub Uuid);
+pub type NamespaceID = Uuid;
+pub type WorkerID = Uuid;
 
 #[derive(Debug, Clone)]
 pub struct Worker {
@@ -22,9 +22,9 @@ impl TryFrom<protos::RegisterWorkerRequest> for Worker {
     fn try_from(
         value: protos::RegisterWorkerRequest,
     ) -> Result<Self, Self::Error> {
-        let id = WorkerID(Uuid::parse_str(&value.id).map_err(|_| {
+        let id = Uuid::parse_str(&value.id).map_err(|_| {
             Status::invalid_argument("Worker ID must be a valid UUID.")
-        })?);
+        })?;
 
         let address = value.address.parse::<SocketAddr>().map_err(|_| {
             let message = "Address must be formatted as host:port.";
@@ -37,7 +37,7 @@ impl TryFrom<protos::RegisterWorkerRequest> for Worker {
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Namespace {
-    pub id: Uuid,
+    pub id: NamespaceID,
     pub name: String,
     pub created_at: DateTime<Utc>,
 }
@@ -71,7 +71,7 @@ impl Namespace {
                 document_id UUID NOT NULL REFERENCES {schema}.documents (id),
                 content TEXT NOT NULL,
                 semantic_vector VECTOR(384) NOT NULL,
-                text_vector TSVECTOR NOT NULL,
+                text_vector TSVECTOR NOT NULL
             );
 
             CREATE INDEX IF NOT EXISTS chunks_semantic_vector_idx
@@ -92,6 +92,21 @@ impl Namespace {
                 solution: None,
             }
         })?;
+
+        Ok(())
+    }
+
+    /// Teardown the namespace by dropping the schema and all its tables.
+    pub async fn teardown(&self, pool: &PgPool) -> Result<(), ErrorResponse> {
+        let schema = self.schema();
+        sqlx::query(&format!("DROP SCHEMA IF EXISTS {schema} CASCADE;"))
+            .execute(pool)
+            .await
+            .map_err(|_| ErrorResponse {
+                code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: String::from("Failed to teardown the namespace"),
+                solution: None,
+            })?;
 
         Ok(())
     }

@@ -19,7 +19,7 @@ impl Coordinator for Arc<Service> {
     ) -> Result<Response<()>, Status> {
         let worker: Worker = request.into_inner().try_into()?;
         self.add_worker(&worker).await;
-        tracing::info!("A worker is registered: {}", worker.id.0);
+        tracing::info!("A worker is registered: {}", worker.id);
         Ok(Response::new(()))
     }
 }

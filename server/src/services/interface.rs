@@ -1,13 +1,24 @@
 use super::*;
 use axum::body::Body;
-use axum::extract::{Json, State};
+use axum::extract::{Json, Path, State};
 use axum::http::Response;
 use axum::response::IntoResponse;
+use axum::routing::{delete, get, post};
+use axum::Router;
 use axum_extra::headers::authorization::{Authorization, Bearer};
 use axum_extra::TypedHeader;
 use regex::bytes::Regex;
 use serde_json::json;
 
+pub fn create_router(service: Arc<Service>) -> Router {
+    Router::new()
+        .route("/", get(heartbeat))
+        .route("/namespaces", post(create_namespace))
+        .route("/namespaces/:name", delete(remove_namespace))
+        .with_state(service)
+}
+
+#[derive(Debug)]
 pub struct SuccessResponse<T: Serialize> {
     pub code: StatusCode,
     pub data: T,
@@ -19,6 +30,7 @@ impl<T: Serialize> IntoResponse for SuccessResponse<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct ErrorResponse {
     pub code: StatusCode,
     pub message: String,
@@ -37,16 +49,16 @@ impl IntoResponse for ErrorResponse {
 }
 
 #[derive(Serialize)]
-pub struct HeartbeatResponse {
+struct HeartbeatResponse {
     pub version: String,
 }
 
 #[derive(Deserialize)]
-pub struct CreateNamespaceRequest {
+struct CreateNamespaceRequest {
     pub name: String,
 }
 
-pub async fn heartbeat() -> SuccessResponse<HeartbeatResponse> {
+async fn heartbeat() -> SuccessResponse<HeartbeatResponse> {
     SuccessResponse {
         code: StatusCode::OK,
         data: HeartbeatResponse {
@@ -55,7 +67,7 @@ pub async fn heartbeat() -> SuccessResponse<HeartbeatResponse> {
     }
 }
 
-pub async fn create_namespace(
+async fn create_namespace(
     TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
     State(service): State<Arc<Service>>,
     Json(payload): Json<CreateNamespaceRequest>,
@@ -83,13 +95,29 @@ pub async fn create_namespace(
     })
 }
 
+async fn remove_namespace(
+    TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
+    State(service): State<Arc<Service>>,
+    Path(name): Path<String>,
+) -> Result<SuccessResponse<Option<Namespace>>, ErrorResponse> {
+    service.validate_secret(bearer.token())?;
+
+    let namespace = service.remove_namespace(name).await?;
+    if let Some(namespace) = &namespace {
+        tracing::info!("A namespace is removed: {}", &namespace.name);
+    }
+
+    Ok(SuccessResponse {
+        code: StatusCode::OK,
+        data: namespace,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use axum::body::to_bytes;
     use axum::http::{Request, StatusCode};
-    use axum::routing::{self, MethodRouter};
-    use axum::Router;
     use serde::de::DeserializeOwned;
     use serde_json::Value;
     use tower::ServiceExt;
@@ -102,10 +130,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_namespace() {
+        let app = setup().await;
         let payload = json!({ "name": "test_ns" });
         let request = create_request("POST", "/namespaces", &payload);
-
-        let app = setup("/namespaces", routing::post(create_namespace)).await;
         let response = app.oneshot(request).await.unwrap();
 
         let status = response.status();
@@ -115,26 +142,38 @@ mod tests {
         assert_eq!(namespace.name, "test_ns");
     }
 
-    async fn setup(
-        path: &str,
-        method_router: MethodRouter<Arc<Service>>,
-    ) -> Router {
+    #[tokio::test]
+    async fn test_remove_namespace() {
+        let uri = "/namespaces/existing_ns";
+        let request = create_request("DELETE", uri, &Value::Null);
+
+        let app = setup().await;
+        let response = app.oneshot(request).await.unwrap();
+
+        let status = response.status();
+        assert_eq!(status, StatusCode::OK);
+
+        let namespace: Option<Namespace>;
+        namespace = consume_body(response.into_body()).await;
+        assert_eq!(namespace.unwrap().name, "existing_ns");
+    }
+
+    async fn setup() -> Router {
         let config = Configuration::default();
         let state = Arc::new(Service::new(&config).await);
 
         let namespaces: Vec<Namespace> =
-            sqlx::query_as("DELETE FROM namespaces RETURNING *;")
+            sqlx::query_as("SELECT * FROM namespaces")
                 .fetch_all(&state.pool)
                 .await
                 .unwrap();
 
         for namespace in namespaces {
-            let schema = namespace.schema();
-            let q = format!("DROP SCHEMA IF EXISTS {schema} CASCADE");
-            sqlx::query(q.as_str()).execute(&state.pool).await.unwrap();
+            state.remove_namespace(&namespace.name).await.unwrap();
         }
 
-        Router::new().route(path, method_router).with_state(state)
+        state.create_namespace("existing_ns").await.unwrap();
+        create_router(state)
     }
 
     fn create_request(method: &str, uri: &str, body: &Value) -> Request<Body> {

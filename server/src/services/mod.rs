@@ -55,7 +55,11 @@ impl Service {
     }
 
     /// Validates the authorization secret from the request.
-    pub fn validate_secret(&self, secret: &str) -> Result<(), ErrorResponse> {
+    pub fn validate_secret(
+        &self,
+        secret: impl AsRef<str>,
+    ) -> Result<(), ErrorResponse> {
+        let secret = secret.as_ref();
         if secret != self.config.secret {
             return Err(ErrorResponse {
                 code: StatusCode::UNAUTHORIZED,
@@ -88,10 +92,12 @@ impl Service {
         self.workers.lock().await.clone()
     }
 
+    /// Creates a new namespace with the given name.
     pub async fn create_namespace(
         &self,
-        name: &str,
+        name: impl AsRef<str>,
     ) -> Result<Namespace, ErrorResponse> {
+        let name = name.as_ref();
         let namespace: Namespace = sqlx::query_as(
             "INSERT INTO namespaces (name)
             VALUES ($1)
@@ -107,6 +113,33 @@ impl Service {
         })?;
 
         namespace.provision(&self.pool).await?;
+        Ok(namespace)
+    }
+
+    /// Removes a namespace and its resources given its name.
+    pub async fn remove_namespace(
+        &self,
+        name: impl AsRef<str>,
+    ) -> Result<Option<Namespace>, ErrorResponse> {
+        let name = name.as_ref();
+        let namespace: Option<Namespace> = sqlx::query_as(
+            "DELETE FROM namespaces
+            WHERE name = $1
+            RETURNING *;",
+        )
+        .bind(name)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|_| ErrorResponse {
+            code: StatusCode::BAD_REQUEST,
+            message: String::from("Failed to remove the namespace."),
+            solution: Some(String::from("Please contact the support team.")),
+        })?;
+
+        if let Some(namespace) = &namespace {
+            namespace.teardown(&self.pool).await?;
+        }
+
         Ok(namespace)
     }
 }
