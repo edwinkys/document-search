@@ -8,8 +8,8 @@ use reqwest::ClientBuilder;
 use semver::Version;
 use services::interface::create_router;
 use services::{Configuration, Service};
-use sqlx::Connection;
 use sqlx::PgConnection;
+use sqlx::{Connection, PgPool};
 use std::sync::Arc;
 use std::{env, fs};
 use tokio::net::TcpListener;
@@ -50,13 +50,14 @@ fn start_command() -> Command {
 }
 
 fn configuration() -> Configuration {
-    let secret = env::var("DL_SECRET_KEY")
-        .expect("Please set the DL_SECRET_KEY environment variable");
+    let getenv = |name: &str| {
+        let error = format!("Please set the {} environment variable", name);
+        env::var(name).expect(&error)
+    };
 
-    let database_url = env::var("DL_DATABASE_URL")
-        .expect("Please set the DL_DATABASE_URL environment variable")
+    let database_url = getenv("DL_DATABASE_URL")
         .parse::<Url>()
-        .expect("Invalid database URL");
+        .expect("Please provide a valid database URL");
 
     let pool_size = match env::var("DL_POOL_SIZE").ok() {
         Some(pool_size) => pool_size.parse().expect("Invalid pool size"),
@@ -64,7 +65,8 @@ fn configuration() -> Configuration {
     };
 
     Configuration {
-        secret,
+        secret: getenv("DL_SECRET_KEY"),
+        bucket: getenv("DL_BUCKET_NAME"),
         database_url,
         pool_size,
     }
@@ -221,25 +223,25 @@ async fn migrate_handler(_args: &ArgMatches) {
         .collect::<Vec<Version>>();
 
     migrations.sort_unstable();
+
+    let pool = PgPool::connect(database_url.as_str())
+        .await
+        .expect("Failed to connect to the database");
+
     for migration in migrations.iter() {
         let path = format!("migrations/{}.sql", migration);
         let script = fs::read_to_string(&path)
             .expect("Failed to read the migration script");
 
         tracing::info!("Applying the migration script:\n\n{script}");
-
-        let mut conn = PgConnection::connect(database_url.as_str())
-            .await
-            .expect("Failed to connect to the database");
-
         sqlx::raw_sql(&script)
-            .execute(&mut conn)
+            .execute(&pool)
             .await
             .expect("Failed to execute the migration script");
 
         sqlx::query("UPDATE version SET version = $1")
             .bind(migration.to_string())
-            .execute(&mut conn)
+            .execute(&pool)
             .await
             .expect("Failed to update the schema version");
 

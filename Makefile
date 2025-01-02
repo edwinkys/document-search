@@ -8,6 +8,7 @@ POSTGRES_IMAGE=pgvector/pgvector:pg17
 
 # Default configuration for local development.
 SECRET_KEY=secretkey
+BUCKET_NAME=dl-9799a9487ced
 DATABASE_URL=postgres://postgres:password@localhost:5432/postgres
 EXTRACTOR_HOST=0.0.0.0
 
@@ -66,9 +67,14 @@ setup_server:
 	@touch server/.env
 	@echo "DL_DATABASE_URL=$(DATABASE_URL)" > server/.env
 	@echo "DL_SECRET_KEY=$(SECRET_KEY)" >> server/.env
+	@echo "DL_BUCKET_NAME=$(BUCKET_NAME)" >> server/.env
+	@echo "AWS_ACCESS_KEY_ID=xxx" >> server/.env
+	@echo "AWS_SECRET_ACCESS_KEY=xxx" >> server/.env
+	@echo "AWS_REGION=us-east-1" >> server/.env
 
 	@cd server && cargo run migrate
-	@echo "$(GREEN)Server environment setup complete.$(RESET)"
+	@echo "$(GREEN)Server environment setup complete:$(RESET)"
+	@echo "Please provide the .env file with the correct values."
 
 .PHONY: setup_templates
 setup_templates:

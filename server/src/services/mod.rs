@@ -1,20 +1,26 @@
-mod coordinator;
 pub mod interface;
+
+mod coordinator;
+mod storage;
 
 use crate::protos;
 use crate::types::*;
+
 use axum::http::StatusCode;
 use interface::ErrorResponse;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::sync::Arc;
+use storage::Storage;
 use tokio::sync::Mutex;
 use url::Url;
 
 #[derive(Debug, Clone)]
 pub struct Configuration {
     pub secret: String,
+    pub bucket: String,
     pub database_url: Url,
     pub pool_size: u16,
 }
@@ -25,6 +31,7 @@ impl Default for Configuration {
         let database = "postgres://postgres:password@localhost:5432/postgres";
         Configuration {
             secret: "secretkey".to_string(),
+            bucket: "dl-9799a9487ced".to_string(),
             database_url: Url::parse(database).unwrap(),
             pool_size: 2,
         }
@@ -35,6 +42,7 @@ impl Default for Configuration {
 pub struct Service {
     config: Configuration,
     pool: PgPool,
+    storage: Storage,
     workers: Mutex<Vec<Worker>>,
 }
 
@@ -50,6 +58,7 @@ impl Service {
         Service {
             config: config.clone(),
             workers: Mutex::new(Vec::new()),
+            storage: Storage::new(&config.bucket).await,
             pool,
         }
     }
@@ -141,5 +150,47 @@ impl Service {
         }
 
         Ok(namespace)
+    }
+
+    /// Returns a namespace given its name if it exists.
+    pub async fn get_namespace(
+        &self,
+        name: impl AsRef<str>,
+    ) -> Result<Namespace, ErrorResponse> {
+        let name = name.as_ref();
+        let namespace: Option<Namespace> = sqlx::query_as(
+            "SELECT * FROM namespaces
+            WHERE name = $1;",
+        )
+        .bind(name)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|_| ErrorResponse {
+            code: StatusCode::BAD_REQUEST,
+            message: String::from("Failed to retrieve the namespace."),
+            solution: None,
+        })?;
+
+        if namespace.is_none() {
+            return Err(ErrorResponse {
+                code: StatusCode::NOT_FOUND,
+                message: "The specified namespace is not found".to_string(),
+                solution: Some(String::from(
+                    "Please use an existing namespace or create a new one.",
+                )),
+            });
+        }
+
+        Ok(namespace.unwrap())
+    }
+
+    /// Creates a new document record within the given namespace.
+    pub async fn create_document(
+        &self,
+        namespace: &Namespace,
+        url: &Url,
+        metadata: &Value,
+    ) {
+        unimplemented!()
     }
 }

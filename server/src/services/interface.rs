@@ -1,6 +1,6 @@
 use super::*;
 use axum::body::Body;
-use axum::extract::{Json, Path, State};
+use axum::extract::{Json, Multipart, Path, State};
 use axum::http::Response;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
@@ -15,6 +15,7 @@ pub fn create_router(service: Arc<Service>) -> Router {
         .route("/", get(heartbeat))
         .route("/namespaces", post(create_namespace))
         .route("/namespaces/:name", delete(remove_namespace))
+        .route("/namespaces/:name/documents", post(upload_document))
         .with_state(service)
 }
 
@@ -54,7 +55,7 @@ struct HeartbeatResponse {
 }
 
 #[derive(Deserialize)]
-struct CreateNamespaceRequest {
+struct CreateNamespacePayload {
     pub name: String,
 }
 
@@ -70,7 +71,7 @@ async fn heartbeat() -> SuccessResponse<HeartbeatResponse> {
 async fn create_namespace(
     TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
     State(service): State<Arc<Service>>,
-    Json(payload): Json<CreateNamespaceRequest>,
+    Json(payload): Json<CreateNamespacePayload>,
 ) -> Result<SuccessResponse<Namespace>, ErrorResponse> {
     service.validate_secret(bearer.token())?;
 
@@ -111,6 +112,22 @@ async fn remove_namespace(
         code: StatusCode::OK,
         data: namespace,
     })
+}
+
+async fn upload_document(
+    TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
+    State(service): State<Arc<Service>>,
+    Path(namespace): Path<String>,
+    mut multipart: Multipart,
+) -> Result<SuccessResponse<Document>, ErrorResponse> {
+    service.validate_secret(bearer.token())?;
+    let namespace = service.get_namespace(&namespace).await?;
+
+    // Upload the document to the storage.
+
+    // Create a new document record in the database.
+
+    unimplemented!()
 }
 
 #[cfg(test)]
