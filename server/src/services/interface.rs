@@ -135,6 +135,7 @@ mod tests {
     use super::*;
     use axum::body::to_bytes;
     use axum::http::{Request, StatusCode};
+    use dotenv::dotenv;
     use serde::de::DeserializeOwned;
     use serde_json::Value;
     use tower::ServiceExt;
@@ -176,6 +177,8 @@ mod tests {
     }
 
     async fn setup() -> Router {
+        dotenv().ok();
+
         let config = Configuration::default();
         let state = Arc::new(Service::new(&config).await);
 

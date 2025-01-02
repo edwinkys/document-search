@@ -27,6 +27,7 @@ impl Coordinator for Arc<Service> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use dotenv::dotenv;
     use uuid::Uuid;
 
     #[tokio::test]
@@ -51,6 +52,7 @@ mod tests {
     }
 
     async fn setup() -> Arc<Service> {
+        dotenv().ok();
         let config = Configuration::default();
         Arc::new(Service::new(&config).await)
     }
