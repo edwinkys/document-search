@@ -9,6 +9,7 @@ use axum_extra::headers::authorization::{Authorization, Bearer};
 use axum_extra::TypedHeader;
 use regex::bytes::Regex;
 use serde_json::json;
+use uuid::Uuid;
 
 pub fn create_router(service: Arc<Service>) -> Router {
     Router::new()
@@ -16,6 +17,7 @@ pub fn create_router(service: Arc<Service>) -> Router {
         .route("/namespaces", post(create_namespace))
         .route("/namespaces/:name", delete(remove_namespace))
         .route("/namespaces/:name/documents", post(upload_document))
+        .route("/namespaces/:name/documents/:id", delete(remove_document))
         .layer(DefaultBodyLimit::max(64 * 1024 * 1024))
         .with_state(service)
 }
@@ -162,6 +164,32 @@ async fn upload_document(
     })
 }
 
+pub async fn remove_document(
+    TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
+    State(service): State<Arc<Service>>,
+    Path((name, id)): Path<(String, String)>,
+) -> Result<SuccessResponse<Option<Document>>, ErrorResponse> {
+    service.validate_secret(bearer.token())?;
+    let namespace = service.get_namespace(name).await?;
+
+    let id = Uuid::parse_str(&id).map_err(|_| ErrorResponse {
+        code: StatusCode::BAD_REQUEST,
+        message: "Please provide a valid document ID.".to_string(),
+        solution: Some(String::from(
+            "A document ID should be in the form of UUID.",
+        )),
+    })?;
+
+    let key = format!("{}/{}.pdf", namespace.schema(), id);
+    service.storage.remove(key).await?;
+    let document = service.remove_document(&namespace, &id).await?;
+
+    Ok(SuccessResponse {
+        code: StatusCode::OK,
+        data: document,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -206,7 +234,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_upload_document() {
+    async fn test_upload_and_remove_document() {
         let mut buffer = Vec::new();
         let file = File::open(".cargo/example.pdf").unwrap();
         let mut reader = BufReader::new(file);
@@ -219,15 +247,25 @@ mod tests {
             .add_part("file", Part::bytes(buffer));
 
         let app = setup().await;
-        let response = app
+        let document: Document = app
             .post("/namespaces/existing_ns/documents")
             .authorization_bearer(BEARER)
             .multipart(form)
-            .await;
+            .await
+            .json();
 
-        let document: Document = response.json();
         assert_eq!(document.metadata, metadata);
         assert_eq!(document.status, DocumentStatus::Pending);
+
+        let id = document.id;
+        let _document: Option<Document> = app
+            .delete(&format!("/namespaces/existing_ns/documents/{id}"))
+            .authorization_bearer(BEARER)
+            .await
+            .json();
+
+        assert!(_document.is_some());
+        assert_eq!(document.id, _document.unwrap().id);
     }
 
     async fn setup() -> TestServer {

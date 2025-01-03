@@ -73,10 +73,14 @@ impl Namespace {
 
             CREATE TABLE IF NOT EXISTS {schema}.chunks (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                document_id UUID NOT NULL REFERENCES {schema}.documents (id),
+                document_id UUID NOT NULL ,
                 content TEXT NOT NULL,
-                semantic_vector VECTOR(384) NOT NULL,
-                text_vector TSVECTOR NOT NULL
+                semantic_vector VECTOR(1536) NOT NULL,
+                text_vector TSVECTOR NOT NULL,
+
+                FOREIGN KEY (document_id)
+                REFERENCES {schema}.documents (id)
+                ON DELETE CASCADE
             );
 
             CREATE INDEX IF NOT EXISTS chunks_semantic_vector_idx

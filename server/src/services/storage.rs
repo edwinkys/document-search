@@ -45,6 +45,30 @@ impl Storage {
         Ok(())
     }
 
+    /// Removes an object from the S3 bucket.
+    pub async fn remove(
+        &self,
+        key: impl AsRef<str>,
+    ) -> Result<(), ErrorResponse> {
+        self.client
+            .delete_object()
+            .bucket(&self.bucket)
+            .key(key.as_ref())
+            .send()
+            .await
+            .map_err(|_e| {
+                #[cfg(test)]
+                eprintln!("Failed to remove the object: {_e:?}");
+                ErrorResponse {
+                    code: StatusCode::INTERNAL_SERVER_ERROR,
+                    message: "Failed to remove the object from S3.".to_string(),
+                    solution: None,
+                }
+            })?;
+
+        Ok(())
+    }
+
     async fn _provision(&self) {
         let client = &self.client;
         let bucket = &self.bucket;

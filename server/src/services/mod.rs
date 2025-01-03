@@ -211,4 +211,32 @@ impl Service {
 
         Ok(document)
     }
+
+    /// Removes a document record from the database.
+    pub async fn remove_document(
+        &self,
+        namespace: &Namespace,
+        id: &DocumentID,
+    ) -> Result<Option<Document>, ErrorResponse> {
+        let schema = namespace.schema();
+        let document: Option<Document> = sqlx::query_as(&format!(
+            "DELETE FROM {schema}.documents
+            WHERE id = $1
+            RETURNING *;",
+        ))
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to remove the document: {_e:?}");
+            ErrorResponse {
+                code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: "Failed to remove the document.".to_string(),
+                solution: None,
+            }
+        })?;
+
+        Ok(document)
+    }
 }
