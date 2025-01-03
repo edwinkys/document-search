@@ -1,6 +1,6 @@
 use super::*;
 use axum::body::Body;
-use axum::extract::{Json, Multipart, Path, State};
+use axum::extract::{DefaultBodyLimit, Json, Multipart, Path, State};
 use axum::http::Response;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
@@ -16,6 +16,7 @@ pub fn create_router(service: Arc<Service>) -> Router {
         .route("/namespaces", post(create_namespace))
         .route("/namespaces/:name", delete(remove_namespace))
         .route("/namespaces/:name/documents", post(upload_document))
+        .layer(DefaultBodyLimit::max(64 * 1024 * 1024))
         .with_state(service)
 }
 
@@ -123,22 +124,54 @@ async fn upload_document(
     service.validate_secret(bearer.token())?;
     let namespace = service.get_namespace(&namespace).await?;
 
-    // Upload the document to the storage.
+    let mut data: Vec<u8> = Vec::new();
+    let mut metadata: Value = Value::Null;
 
-    // Create a new document record in the database.
+    while let Ok(Some(field)) = multipart.next_field().await {
+        if let Some(name) = field.name() {
+            if name == "metadata" {
+                let bytes = field.bytes().await.unwrap();
+                metadata = serde_json::from_slice(&bytes).map_err(|_| {
+                    ErrorResponse {
+                        code: StatusCode::BAD_REQUEST,
+                        message: "Failed to parse the metadata.".to_string(),
+                        solution: None,
+                    }
+                })?;
+            } else if name == "file" {
+                data = field.bytes().await.unwrap().to_vec();
+            }
+        }
+    }
 
-    unimplemented!()
+    if data.is_empty() {
+        return Err(ErrorResponse {
+            code: StatusCode::BAD_REQUEST,
+            message: "Please upload a valid document.".to_string(),
+            solution: None,
+        });
+    }
+
+    let document = service.create_document(&namespace, &metadata).await?;
+    let key = format!("{}/{}.pdf", namespace.schema(), document.id);
+    service.storage.upload(key, data).await?;
+
+    Ok(SuccessResponse {
+        code: StatusCode::CREATED,
+        data: document,
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::body::to_bytes;
-    use axum::http::{Request, StatusCode};
+    use axum_test::multipart::{MultipartForm, Part};
+    use axum_test::TestServer;
     use dotenv::dotenv;
-    use serde::de::DeserializeOwned;
-    use serde_json::Value;
-    use tower::ServiceExt;
+    use std::fs::File;
+    use std::io::{BufReader, Read};
+
+    const BEARER: &str = "secretkey";
 
     #[tokio::test]
     async fn test_heartbeat() {
@@ -150,33 +183,54 @@ mod tests {
     async fn test_create_namespace() {
         let app = setup().await;
         let payload = json!({ "name": "test_ns" });
-        let request = create_request("POST", "/namespaces", &payload);
-        let response = app.oneshot(request).await.unwrap();
+        let response = app
+            .post("/namespaces")
+            .authorization_bearer(BEARER)
+            .json(&payload)
+            .await;
 
-        let status = response.status();
-        assert_eq!(status, StatusCode::CREATED);
-
-        let namespace: Namespace = consume_body(response.into_body()).await;
+        let namespace: Namespace = response.json();
         assert_eq!(namespace.name, "test_ns");
     }
 
     #[tokio::test]
     async fn test_remove_namespace() {
-        let uri = "/namespaces/existing_ns";
-        let request = create_request("DELETE", uri, &Value::Null);
-
         let app = setup().await;
-        let response = app.oneshot(request).await.unwrap();
+        let response = app
+            .delete("/namespaces/existing_ns")
+            .authorization_bearer(BEARER)
+            .await;
 
-        let status = response.status();
-        assert_eq!(status, StatusCode::OK);
-
-        let namespace: Option<Namespace>;
-        namespace = consume_body(response.into_body()).await;
+        let namespace: Option<Namespace> = response.json();
         assert_eq!(namespace.unwrap().name, "existing_ns");
     }
 
-    async fn setup() -> Router {
+    #[tokio::test]
+    async fn test_upload_document() {
+        let mut buffer = Vec::new();
+        let file = File::open(".cargo/example.pdf").unwrap();
+        let mut reader = BufReader::new(file);
+        reader.read_to_end(&mut buffer).unwrap();
+
+        let metadata = json!({ "title": "Product Quantization" });
+
+        let form = MultipartForm::new()
+            .add_text("metadata", metadata.to_string())
+            .add_part("file", Part::bytes(buffer));
+
+        let app = setup().await;
+        let response = app
+            .post("/namespaces/existing_ns/documents")
+            .authorization_bearer(BEARER)
+            .multipart(form)
+            .await;
+
+        let document: Document = response.json();
+        assert_eq!(document.metadata, metadata);
+        assert_eq!(document.status, DocumentStatus::Pending);
+    }
+
+    async fn setup() -> TestServer {
         dotenv().ok();
 
         let config = Configuration::default();
@@ -193,21 +247,6 @@ mod tests {
         }
 
         state.create_namespace("existing_ns").await.unwrap();
-        create_router(state)
-    }
-
-    fn create_request(method: &str, uri: &str, body: &Value) -> Request<Body> {
-        Request::builder()
-            .method(method)
-            .uri(uri)
-            .header("authorization", "bearer secretkey")
-            .header("content-type", "application/json")
-            .body(Body::from(body.to_string()))
-            .unwrap()
-    }
-
-    async fn consume_body<T: DeserializeOwned>(body: Body) -> T {
-        let bytes = to_bytes(body, 2048).await.unwrap();
-        serde_json::from_slice(&bytes).unwrap()
+        TestServer::new(create_router(state)).unwrap()
     }
 }

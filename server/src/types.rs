@@ -5,10 +5,10 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::postgres::PgRow;
+use sqlx::Type;
 use sqlx::{FromRow, PgPool, Row};
 use std::net::SocketAddr;
 use tonic::Status;
-use url::Url;
 use uuid::Uuid;
 
 pub type NamespaceID = Uuid;
@@ -62,7 +62,6 @@ impl Namespace {
 
             CREATE TABLE IF NOT EXISTS {schema}.documents (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                url TEXT NOT NULL,
                 status doc_status NOT NULL DEFAULT 'pending',
                 metadata JSONB,
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -90,8 +89,7 @@ impl Namespace {
 
         sqlx::raw_sql(&query).execute(pool).await.map_err(|_e| {
             #[cfg(test)]
-            println!("Failed to provision the namespace: {:?}", _e);
-
+            eprintln!("Failed to provision the namespace: {_e:?}");
             ErrorResponse {
                 code: StatusCode::INTERNAL_SERVER_ERROR,
                 message: String::from("Failed to provision the namespace"),
@@ -118,7 +116,9 @@ impl Namespace {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Serialize, Deserialize, Type)]
+#[sqlx(type_name = "doc_status", rename_all = "lowercase")]
 pub enum DocumentStatus {
     Pending,
     Processing,
@@ -129,7 +129,6 @@ pub enum DocumentStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Document {
     pub id: DocumentID,
-    pub url: Url,
     pub status: DocumentStatus,
     pub metadata: Value,
     pub updated_at: DateTime<Utc>,
@@ -138,27 +137,12 @@ pub struct Document {
 
 impl<'r> FromRow<'r, PgRow> for Document {
     fn from_row(row: &'r PgRow) -> Result<Self, sqlx::Error> {
-        let url: String = row.try_get("url")?;
-        let url = Url::parse(&url).map_err(|_| {
-            sqlx::Error::Decode("Failed to parse the document URL".into())
-        })?;
-
-        let status: String = row.try_get("status")?;
-        let status = match status.as_str() {
-            "pending" => DocumentStatus::Pending,
-            "processing" => DocumentStatus::Processing,
-            "completed" => DocumentStatus::Completed,
-            "failed" => DocumentStatus::Failed,
-            _ => DocumentStatus::Failed,
-        };
-
         Ok(Document {
             id: row.try_get("id")?,
+            status: row.try_get("status")?,
             metadata: row.try_get("metadata")?,
             created_at: row.try_get("created_at")?,
             updated_at: row.try_get("updated_at")?,
-            url,
-            status,
         })
     }
 }

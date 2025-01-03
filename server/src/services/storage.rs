@@ -1,4 +1,7 @@
+use super::interface::ErrorResponse;
+use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::Client;
+use axum::http::StatusCode;
 
 #[derive(Debug)]
 pub struct Storage {
@@ -18,6 +21,28 @@ impl Storage {
         #[cfg(not(test))]
         storage._provision().await;
         storage
+    }
+
+    /// Uploads the data to the S3 bucket.
+    pub async fn upload(
+        &self,
+        key: impl AsRef<str>,
+        data: Vec<u8>,
+    ) -> Result<(), ErrorResponse> {
+        self.client
+            .put_object()
+            .bucket(&self.bucket)
+            .key(key.as_ref())
+            .body(ByteStream::from(data))
+            .send()
+            .await
+            .map_err(|_| ErrorResponse {
+                code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: "Failed to upload the object to S3.".to_string(),
+                solution: None,
+            })?;
+
+        Ok(())
     }
 
     async fn _provision(&self) {

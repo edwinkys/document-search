@@ -188,9 +188,27 @@ impl Service {
     pub async fn create_document(
         &self,
         namespace: &Namespace,
-        url: &Url,
         metadata: &Value,
-    ) {
-        unimplemented!()
+    ) -> Result<Document, ErrorResponse> {
+        let schema = namespace.schema();
+        let document: Document = sqlx::query_as(&format!(
+            "INSERT INTO {schema}.documents (metadata)
+            VALUES ($1)
+            RETURNING *;",
+        ))
+        .bind(metadata)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to create a new document: {_e:?}");
+            ErrorResponse {
+                code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: String::from("Failed to create a new document."),
+                solution: None,
+            }
+        })?;
+
+        Ok(document)
     }
 }
