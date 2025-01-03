@@ -105,20 +105,30 @@ impl Service {
     pub async fn create_namespace(
         &self,
         name: impl AsRef<str>,
+        config: &NamespaceConfig,
     ) -> Result<Namespace, ErrorResponse> {
         let name = name.as_ref();
+        let config = serde_json::to_value(config).unwrap();
+
         let namespace: Namespace = sqlx::query_as(
-            "INSERT INTO namespaces (name)
-            VALUES ($1)
+            "INSERT INTO namespaces (name, config)
+            VALUES ($1, $2)
             RETURNING *;",
         )
         .bind(name)
+        .bind(&config)
         .fetch_one(&self.pool)
         .await
-        .map_err(|_| ErrorResponse {
-            code: StatusCode::BAD_REQUEST,
-            message: String::from("Failed to create a new namespace."),
-            solution: Some(String::from("Please contact the support team.")),
+        .map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to create a new namespace: {_e:?}");
+            ErrorResponse {
+                code: StatusCode::BAD_REQUEST,
+                message: String::from("Failed to create a new namespace."),
+                solution: Some(String::from(
+                    "Please contact the support team.",
+                )),
+            }
         })?;
 
         namespace.provision(&self.pool).await?;

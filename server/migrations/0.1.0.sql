@@ -12,6 +12,7 @@ VALUES ('0.1.0');
 CREATE TABLE IF NOT EXISTS namespaces (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT UNIQUE NOT NULL,
+    config JSONB NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 

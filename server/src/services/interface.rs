@@ -60,6 +60,7 @@ struct HeartbeatResponse {
 #[derive(Deserialize)]
 struct CreateNamespacePayload {
     pub name: String,
+    pub config: Option<Value>,
 }
 
 async fn heartbeat() -> SuccessResponse<HeartbeatResponse> {
@@ -90,7 +91,22 @@ async fn create_namespace(
         });
     }
 
-    let namespace = service.create_namespace(&payload.name).await?;
+    let mut config = NamespaceConfig::default();
+    if let Some(conf) = &payload.config {
+        config = serde_json::from_value(conf.clone()).map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to parse the namespace configuration: {_e:?}");
+            ErrorResponse {
+                code: StatusCode::BAD_REQUEST,
+                message: "Please provide a valid configuration.".to_string(),
+                solution: Some(String::from(
+                    "Check the documentation for the available options.",
+                )),
+            }
+        })?;
+    }
+
+    let namespace = service.create_namespace(&payload.name, &config).await?;
     tracing::info!("A new namespace is created: {}", &namespace.name);
 
     Ok(SuccessResponse {
@@ -222,6 +238,27 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_create_namespace_custom_config() {
+        let app = setup().await;
+        let payload = json!({
+            "name": "test_ns",
+            "config": {
+                "index": { "m": 16, "ef_construction": 64 }
+            }
+        });
+
+        let response = app
+            .post("/namespaces")
+            .authorization_bearer(BEARER)
+            .json(&payload)
+            .await;
+
+        let namespace: Namespace = response.json();
+        assert_eq!(namespace.name, "test_ns");
+        assert_eq!(namespace.config.index.m, 16);
+    }
+
+    #[tokio::test]
     async fn test_remove_namespace() {
         let app = setup().await;
         let response = app
@@ -284,7 +321,11 @@ mod tests {
             state.remove_namespace(&namespace.name).await.unwrap();
         }
 
-        state.create_namespace("existing_ns").await.unwrap();
+        state
+            .create_namespace("existing_ns", &NamespaceConfig::default())
+            .await
+            .unwrap();
+
         TestServer::new(create_router(state)).unwrap()
     }
 }

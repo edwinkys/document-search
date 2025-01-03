@@ -39,11 +39,53 @@ impl TryFrom<protos::RegisterWorkerRequest> for Worker {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IndexConfig {
+    pub m: u8,
+    pub ef_construction: u16,
+}
+
+impl Default for IndexConfig {
+    fn default() -> Self {
+        IndexConfig {
+            m: 32,
+            ef_construction: 128,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NamespaceConfig {
+    pub index: IndexConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Namespace {
     pub id: NamespaceID,
     pub name: String,
+    pub config: NamespaceConfig,
     pub created_at: DateTime<Utc>,
+}
+
+impl<'r> FromRow<'r, PgRow> for Namespace {
+    fn from_row(row: &'r PgRow) -> Result<Self, sqlx::Error> {
+        let config: Value = row.try_get("config")?;
+        let config = serde_json::from_value(config).map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to parse namespace configuration: {_e:?}");
+            sqlx::Error::ColumnDecode {
+                index: "config".to_string(),
+                source: "Failed to parse the configuration from JSON.".into(),
+            }
+        })?;
+
+        Ok(Namespace {
+            id: row.try_get("id")?,
+            name: row.try_get("name")?,
+            created_at: row.try_get("created_at")?,
+            config,
+        })
+    }
 }
 
 impl Namespace {
@@ -56,6 +98,9 @@ impl Namespace {
 
     /// Provisions the namespace with the required schema tables and indexes.
     pub async fn provision(&self, pool: &PgPool) -> Result<(), ErrorResponse> {
+        let m = self.config.index.m;
+        let ef_construction = self.config.index.ef_construction;
+
         let schema = self.schema();
         let query = format!(
             "CREATE SCHEMA IF NOT EXISTS {schema};
@@ -85,7 +130,7 @@ impl Namespace {
 
             CREATE INDEX IF NOT EXISTS chunks_semantic_vector_idx
             ON {schema}.chunks USING HNSW (semantic_vector vector_cosine_ops)
-            WITH (m = 32, ef_construction = 128);
+            WITH (m = {m}, ef_construction = {ef_construction});
 
             CREATE INDEX IF NOT EXISTS chunks_text_vector_idx
             ON {schema}.chunks USING GIN (text_vector);"
@@ -162,6 +207,7 @@ mod tests {
         let namespace = Namespace {
             id: Uuid::from_str(id).unwrap(),
             name: "default".to_string(),
+            config: NamespaceConfig::default(),
             created_at: Utc::now(),
         };
 
