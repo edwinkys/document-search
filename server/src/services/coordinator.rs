@@ -22,6 +22,13 @@ impl Coordinator for Arc<Service> {
         tracing::info!("A worker is registered: {}", worker.id);
         Ok(Response::new(()))
     }
+
+    async fn create_chunk(
+        &self,
+        _request: Request<protos::CreateChunkRequest>,
+    ) -> Result<Response<()>, Status> {
+        unimplemented!()
+    }
 }
 
 #[cfg(test)]

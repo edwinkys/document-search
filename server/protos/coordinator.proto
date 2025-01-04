@@ -18,6 +18,9 @@ service Coordinator {
 
     // Adds an extraction worker to the coordinator service.
     rpc RegisterWorker(RegisterWorkerRequest) returns (google.protobuf.Empty) {}
+
+    // Creates chunk records from the extracted document content.
+    rpc CreateChunk(CreateChunkRequest) returns (google.protobuf.Empty) {}
 }
 
 message HeartbeatResponse {
@@ -27,4 +30,14 @@ message HeartbeatResponse {
 message RegisterWorkerRequest {
     string id = 1;
     string address = 2;
+}
+
+message CreateChunkRequest {
+    string namespace = 1;
+    string document_id = 2;
+    repeated Chunk chunks = 3;
+}
+
+message Chunk {
+    string content = 1;
 }
