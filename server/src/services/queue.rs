@@ -1,6 +1,9 @@
-use lapin::options::QueueDeclareOptions;
+use super::interface::ErrorResponse;
+use crate::types::ExtractionTask;
+use axum::http::StatusCode;
+use lapin::options::{BasicPublishOptions, QueueDeclareOptions};
 use lapin::types::FieldTable;
-use lapin::{Channel, Connection, ConnectionProperties};
+use lapin::{BasicProperties, Channel, Connection, ConnectionProperties};
 
 #[derive(Debug)]
 pub struct Queue {
@@ -33,6 +36,63 @@ impl Queue {
         Queue {
             name: name.to_string(),
             channel,
+        }
+    }
+
+    /// Publishes an extraction task to the queue.
+    pub async fn publish(
+        &self,
+        task: &ExtractionTask,
+    ) -> Result<(), ErrorResponse> {
+        let name = self.name.as_str();
+        let options = BasicPublishOptions::default();
+        let properties = BasicProperties::default();
+
+        // Unwrapping is safe because the task is serializable.
+        let payload = serde_json::to_vec(task).unwrap();
+
+        self.channel
+            .basic_publish("", name, options, &payload, properties)
+            .await
+            .map_err(|_e| {
+                #[cfg(test)]
+                eprintln!("Failed to queue up the task: {_e:?}");
+                ErrorResponse {
+                    code: StatusCode::INTERNAL_SERVER_ERROR,
+                    message: String::from("Failed to queue up the task."),
+                    solution: None,
+                }
+            })?;
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lapin::options::QueuePurgeOptions;
+
+    impl Queue {
+        /// Removes all messages from the queue.
+        pub async fn purge(&self) -> Result<(), ErrorResponse> {
+            let name = self.name.as_str();
+            let options = QueuePurgeOptions::default();
+
+            self.channel
+                .queue_purge(name, options)
+                .await
+                .map_err(|_e| {
+                    #[cfg(test)]
+                    eprintln!("Failed to purge the queue: {_e:?}");
+                    ErrorResponse {
+                        code: StatusCode::INTERNAL_SERVER_ERROR,
+                        message: String::from("Failed to purge the queue."),
+                        solution: None,
+                    }
+                })?;
+
+            Ok(())
         }
     }
 }

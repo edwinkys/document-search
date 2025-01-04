@@ -171,8 +171,16 @@ async fn upload_document(
     }
 
     let document = service.create_document(&namespace, &metadata).await?;
-    let key = format!("{}/{}.pdf", namespace.schema(), document.id);
-    service.storage.upload(key, data).await?;
+    let key = document.key(&namespace);
+    service.storage.upload(&key, data).await?;
+
+    let task = ExtractionTask {
+        namespace: namespace.name,
+        document_id: document.id,
+        document_key: key,
+    };
+
+    service.queue.publish(&task).await?;
 
     Ok(SuccessResponse {
         code: StatusCode::CREATED,
@@ -196,9 +204,11 @@ pub async fn remove_document(
         )),
     })?;
 
-    let key = format!("{}/{}.pdf", namespace.schema(), id);
-    service.storage.remove(key).await?;
     let document = service.remove_document(&namespace, &id).await?;
+    if let Some(document) = &document {
+        let key = document.key(&namespace);
+        service.storage.remove(&key).await?;
+    }
 
     Ok(SuccessResponse {
         code: StatusCode::OK,
@@ -212,6 +222,10 @@ mod tests {
     use axum_test::multipart::{MultipartForm, Part};
     use axum_test::TestServer;
     use dotenv::dotenv;
+    use futures_lite::StreamExt;
+    use lapin::options::BasicConsumeOptions;
+    use lapin::types::FieldTable;
+    use lapin::{Connection, ConnectionProperties};
     use std::fs::File;
     use std::io::{BufReader, Read};
 
@@ -303,6 +317,26 @@ mod tests {
 
         assert!(_document.is_some());
         assert_eq!(document.id, _document.unwrap().id);
+
+        // Check if after the document is uploaded, a task is queued up.
+
+        let config = Configuration::default();
+        let url = config.queue_url.as_str();
+        let properties = ConnectionProperties::default();
+        let connection = Connection::connect(url, properties).await.unwrap();
+
+        let channel = connection.create_channel().await.unwrap();
+
+        let options = BasicConsumeOptions::default();
+        let table = FieldTable::default();
+        let mut consumer = channel
+            .basic_consume(QUEUE_NAME, "consumer", options, table)
+            .await
+            .unwrap();
+
+        let payload = consumer.next().await.unwrap().unwrap().data;
+        let task: ExtractionTask = serde_json::from_slice(&payload).unwrap();
+        assert_eq!(document.id, task.document_id);
     }
 
     async fn setup() -> TestServer {
@@ -310,6 +344,7 @@ mod tests {
 
         let config = Configuration::default();
         let state = Arc::new(Service::new(&config).await);
+        state.queue.purge().await.unwrap();
 
         let namespaces: Vec<Namespace> =
             sqlx::query_as("SELECT * FROM namespaces")

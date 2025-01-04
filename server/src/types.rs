@@ -40,6 +40,13 @@ impl TryFrom<protos::RegisterWorkerRequest> for Worker {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExtractionTask {
+    pub namespace: String,
+    pub document_key: String,
+    pub document_id: DocumentID,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IndexConfig {
     pub m: u8,
     pub ef_construction: u16,
@@ -193,6 +200,13 @@ impl<'r> FromRow<'r, PgRow> for Document {
             created_at: row.try_get("created_at")?,
             updated_at: row.try_get("updated_at")?,
         })
+    }
+}
+
+impl Document {
+    /// Returns the key for the document in the S3 bucket.
+    pub fn key(&self, namespace: &Namespace) -> String {
+        format!("{}/{}.pdf", namespace.schema(), self.id)
     }
 }
 
