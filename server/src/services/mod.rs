@@ -1,6 +1,7 @@
 pub mod interface;
 
 mod coordinator;
+mod queue;
 mod storage;
 
 use crate::protos;
@@ -8,6 +9,7 @@ use crate::types::*;
 
 use axum::http::StatusCode;
 use interface::ErrorResponse;
+use queue::Queue;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::postgres::PgPoolOptions;
@@ -17,10 +19,13 @@ use storage::Storage;
 use tokio::sync::Mutex;
 use url::Url;
 
+const QUEUE_NAME: &str = "tasks";
+
 #[derive(Debug, Clone)]
 pub struct Configuration {
     pub secret: String,
     pub bucket: String,
+    pub queue_url: Url,
     pub database_url: Url,
     pub pool_size: u16,
 }
@@ -28,10 +33,13 @@ pub struct Configuration {
 #[cfg(test)]
 impl Default for Configuration {
     fn default() -> Self {
+        let queue = "amqp://localhost:5672/%2f";
         let database = "postgres://postgres:password@localhost:5432/postgres";
+
         Configuration {
             secret: "secretkey".to_string(),
             bucket: "dl-9799a9487ced".to_string(),
+            queue_url: Url::parse(queue).unwrap(),
             database_url: Url::parse(database).unwrap(),
             pool_size: 2,
         }
@@ -42,6 +50,7 @@ impl Default for Configuration {
 pub struct Service {
     config: Configuration,
     pool: PgPool,
+    queue: Queue,
     storage: Storage,
     workers: Mutex<Vec<Worker>>,
 }
@@ -58,6 +67,7 @@ impl Service {
         Service {
             config: config.clone(),
             workers: Mutex::new(Vec::new()),
+            queue: Queue::new(QUEUE_NAME, config.queue_url.as_str()).await,
             storage: Storage::new(&config.bucket).await,
             pool,
         }

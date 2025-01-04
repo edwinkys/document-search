@@ -55,9 +55,13 @@ fn configuration() -> Configuration {
         env::var(name).expect(&error)
     };
 
+    let queue_url = getenv("DL_QUEUE_URL")
+        .parse::<Url>()
+        .expect("Please provide a valid RabbitMQ URL");
+
     let database_url = getenv("DL_DATABASE_URL")
         .parse::<Url>()
-        .expect("Please provide a valid database URL");
+        .expect("Please provide a valid Postgres URL");
 
     let pool_size = match env::var("DL_POOL_SIZE").ok() {
         Some(pool_size) => pool_size.parse().expect("Invalid pool size"),
@@ -67,6 +71,7 @@ fn configuration() -> Configuration {
     Configuration {
         secret: getenv("DL_SECRET_KEY"),
         bucket: getenv("DL_BUCKET_NAME"),
+        queue_url,
         database_url,
         pool_size,
     }

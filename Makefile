@@ -5,10 +5,12 @@ RESET := \033[0m
 
 # Some setup variables.
 POSTGRES_IMAGE=pgvector/pgvector:pg17
+RABBITMQ_IMAGE=rabbitmq:latest
 
 # Default configuration for local development.
 SECRET_KEY=secretkey
 BUCKET_NAME=dl-9799a9487ced
+QUEUE_URL=amqp://localhost:5672/%2f
 DATABASE_URL=postgres://postgres:password@localhost:5432/postgres
 EXTRACTOR_HOST=0.0.0.0
 
@@ -26,6 +28,11 @@ all:
 	@echo "  - pull_postgres: Pull Postgres image from Docker Hub"
 	@echo "  - run_postgres: Run Postgres Docker container"
 	@echo "  - stop_postgres: Stop the running Postgres container"
+	@echo ""
+	@echo "RabbitMQ:"
+	@echo "  - pull_rabbitmq: Pull RabbitMQ image from Docker Hub"
+	@echo "  - run_rabbitmq: Run RabbitMQ Docker container"
+	@echo "  - stop_rabbitmq: Stop the running RabbitMQ container"
 	@echo ""
 	@echo "Setup Scripts:"
 	@echo "  - setup_server"
@@ -58,14 +65,44 @@ stop_postgres:
 	@docker rm dl-postgres
 	@echo "$(GREEN)Postgres Docker container stopped and removed.$(RESET)"
 
+.PHONY: pull_rabbitmq
+pull_rabbitmq:
+	@echo "Pulling RabbitMQ image from Docker Hub..."
+	@docker pull $(RABBITMQ_IMAGE)
+	@docker tag $(RABBITMQ_IMAGE) dl-rabbitmq:latest
+	@echo "$(GREEN)RabbitMQ image pulled successfully as:$(RESET)"
+	@echo "dl-rabbitmq:latest"
+
+.PHONY: run_rabbitmq
+run_rabbitmq:
+	@echo "Running RabbitMQ Docker container..."
+	@docker run -d --name dl-rabbitmq \
+	-p 5672:5672 \
+	-p 15672:15672 \
+	dl-rabbitmq:latest
+
+	@echo "$(GREEN)RabbitMQ Docker container is running on:$(RESET)"
+	@echo "$(QUEUE_URL)"
+
+.PHONY: stop_rabbitmq
+stop_rabbitmq:
+	@echo "Stopping RabbitMQ Docker container..."
+	@docker stop dl-rabbitmq
+	@docker rm dl-rabbitmq
+	@echo "$(GREEN)The RabbitMQ container is stopped and removed.$(RESET)"
+
 .PHONY: setup_server
 setup_server:
 	@echo "Setting up server environment..."
 	@$(MAKE) pull_postgres
 	@$(MAKE) run_postgres
 
+	@$(MAKE) pull_rabbitmq
+	@$(MAKE) run_rabbitmq
+
 	@touch server/.env
-	@echo "DL_DATABASE_URL=$(DATABASE_URL)" > server/.env
+	@echo "DL_QUEUE_URL=$(QUEUE_URL)" > server/.env
+	@echo "DL_DATABASE_URL=$(DATABASE_URL)" >> server/.env
 	@echo "DL_SECRET_KEY=$(SECRET_KEY)" >> server/.env
 	@echo "DL_BUCKET_NAME=$(BUCKET_NAME)" >> server/.env
 	@echo "AWS_ACCESS_KEY_ID=xxx" >> server/.env
@@ -110,6 +147,7 @@ setup_extractor:
 .PHONY: teardown
 teardown:
 	@$(MAKE) stop_postgres
+	@$(MAKE) stop_rabbitmq
 	@echo "$(GREEN)Environment teardown complete.$(RESET)"
 
 .PHONY: generate_rpc_stubs

@@ -5,8 +5,8 @@ use axum::http::StatusCode;
 
 #[derive(Debug)]
 pub struct Storage {
-    pub bucket: String,
-    pub client: Client,
+    bucket: String,
+    client: Client,
 }
 
 impl Storage {
