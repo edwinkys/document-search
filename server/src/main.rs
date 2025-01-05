@@ -153,7 +153,7 @@ async fn start_interface_server(service: Arc<Service>) {
 /// check endpoint on the worker.
 async fn start_worker_validator_loop(service: Arc<Service>) {
     loop {
-        sleep(Duration::from_secs(10)).await;
+        sleep(Duration::from_secs(30)).await;
 
         let mut missing_workers: Vec<WorkerID> = Vec::new();
         let workers = service.workers().await;

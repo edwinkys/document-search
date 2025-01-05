@@ -142,7 +142,14 @@ setup_extractor:
 
 	@touch extractor/.env
 	@echo "DL_EXTRACTOR_HOST=$(EXTRACTOR_HOST)" > extractor/.env
-	@echo "$(GREEN)Extractor environment setup complete.$(RESET)"
+	@echo "DL_QUEUE_URL=$(QUEUE_URL)" >> extractor/.env
+	@echo "DL_BUCKET_NAME=$(BUCKET_NAME)" >> extractor/.env
+	@echo "AWS_ACCESS_KEY_ID=xxx" >> extractor/.env
+	@echo "AWS_SECRET_ACCESS_KEY=xxx" >> extractor/.env
+	@echo "AWS_REGION=us-east-1" >> extractor/.env
+
+	@echo "$(GREEN)Extractor environment setup complete:$(RESET)"
+	@echo "Please provide the .env file with the correct values."
 
 .PHONY: teardown
 teardown:

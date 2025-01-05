@@ -107,7 +107,7 @@ async fn create_namespace(
     }
 
     let namespace = service.create_namespace(&payload.name, &config).await?;
-    tracing::info!("A new namespace is created: {}", &namespace.name);
+    tracing::info!("NamespaceCreated: {namespace:?}");
 
     Ok(SuccessResponse {
         code: StatusCode::CREATED,
@@ -124,7 +124,7 @@ async fn remove_namespace(
 
     let namespace = service.remove_namespace(name).await?;
     if let Some(namespace) = &namespace {
-        tracing::info!("A namespace is removed: {}", &namespace.name);
+        tracing::info!("NamespaceRemoved: {namespace:?}");
     }
 
     Ok(SuccessResponse {
@@ -173,6 +173,7 @@ async fn upload_document(
     let document = service.create_document(&namespace, &metadata).await?;
     let key = document.key(&namespace);
     service.storage.upload(&key, data).await?;
+    tracing::info!("DocumentCreated: {document:?}");
 
     let task = ExtractionTask {
         namespace: namespace.name,
@@ -208,6 +209,7 @@ pub async fn remove_document(
     if let Some(document) = &document {
         let key = document.key(&namespace);
         service.storage.remove(&key).await?;
+        tracing::info!("DocumentRemoved: {document:?}");
     }
 
     Ok(SuccessResponse {
