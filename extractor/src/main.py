@@ -30,6 +30,11 @@ def start_api():
 def start():
     """Start the extractor worker."""
 
+    keys = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "DL_BUCKET_NAME"]
+    for key in keys:
+        if not os.getenv(key):
+            raise ValueError(f"Please set the {key} environment variable.")
+
     processes = []
 
     # Start the API server in a separate process.

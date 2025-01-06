@@ -94,3 +94,6 @@ async def process_message(message: AbstractIncomingMessage):
         )
 
         console.log(f"INFO: Processing document {task.document_id}...")
+        path = task.download_document()
+
+        task.cleanup()
