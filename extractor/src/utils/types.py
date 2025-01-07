@@ -1,6 +1,7 @@
 import os
 import boto3
 from uuid import UUID
+from ..stubs import coordinator_pb2 as protos
 
 TMP_PATH = "dl-tmp"
 
@@ -21,6 +22,13 @@ class Chunk:
         self.page = page
         self.headings = headings
         self.content = content
+
+    def to_proto(self) -> protos.Chunk:
+        return protos.Chunk(
+            page=self.page,
+            headings=self.headings,
+            content=self.content,
+        )
 
 
 class ExtractionTask:

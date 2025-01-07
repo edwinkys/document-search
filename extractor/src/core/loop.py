@@ -9,7 +9,7 @@ from rich.console import Console
 from uuid import UUID
 from ..utils.coordinator import Coordinator
 from ..utils.extraction import Extraction
-from ..utils.types import ExtractionTask, Chunk
+from ..utils.types import ExtractionTask
 
 QUEUE_NAME = "tasks"
 SLEEP = 5
@@ -72,15 +72,7 @@ async def async_loop():
             queue = await channel.get_queue(QUEUE_NAME)
             message = await queue.get(no_ack=False, fail=False)
             if message is not None:
-                async with message.process(ignore_processed=True):
-                    body = json.loads(message.body.decode())
-                    coordinator.update_document(
-                        namespace=body["namespace"],
-                        id=body["document_id"],
-                        status="processing",
-                    )
-
-                    chunks = await process_message(message)
+                await process_message(coordinator, message)
 
         await asyncio.sleep(SLEEP)
 
@@ -90,23 +82,27 @@ def external_ip_address() -> str:
     return response.json()["ip"]
 
 
-async def process_message(message: AbstractIncomingMessage) -> list[Chunk]:
-    async with message.process():
+async def process_message(
+    coordinator: Coordinator,
+    message: AbstractIncomingMessage,
+):
+    async with message.process(ignore_processed=True):
         # The message is a JSON string.
-        # Check server/src/types.rs for the structure of the message.
+        # Check server/src/types.rs for the ExtractionTask struct.
         body = json.loads(message.body.decode())
-        task = ExtractionTask(
-            namespace=body["namespace"],
-            document_key=body["document_key"],
-            document_id=UUID(body["document_id"]),
-        )
+        namespace = body["namespace"]
+        document_key = body["document_key"]
+        document_id = body["document_id"]
 
-        console.log(f"INFO: Processing document {task.document_id}...")
+        console.log(f"INFO: Processing document {document_id}...")
+        coordinator.update_document(namespace, document_id, "processing")
+
+        task = ExtractionTask(namespace, document_key, UUID(document_id))
         path = task.download_document()
 
         extraction = Extraction(path)
         results = extraction.extract()
         console.log(f"INFO: Extracted {len(results)} chunks from the document")
 
+        coordinator.create_chunk(namespace, document_id, results)
         task.cleanup()
-        return results

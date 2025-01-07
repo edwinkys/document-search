@@ -2,7 +2,7 @@ import grpc
 from google.protobuf.empty_pb2 import Empty
 from ..stubs import coordinator_pb2 as protos
 from ..stubs.coordinator_pb2_grpc import CoordinatorStub
-from .types import HeartbeatResponse
+from .types import HeartbeatResponse, Chunk
 
 
 class Coordinator:
@@ -29,3 +29,13 @@ class Coordinator:
         )
 
         self.connection.UpdateDocument(request=request)
+
+    def create_chunk(self, namespace: str, id: str, chunks: list[Chunk]):
+        chunks = [chunk.to_proto() for chunk in chunks]
+        request = protos.CreateChunkRequest(
+            namespace=namespace,
+            id=id,
+            chunks=chunks,
+        )
+
+        self.connection.CreateChunk(request=request)
