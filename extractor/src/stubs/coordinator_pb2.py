@@ -22,7 +22,7 @@ from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
-    b'\n\x11\x63oordinator.proto\x12\x0b\x63oordinator\x1a\x1bgoogle/protobuf/empty.proto"$\n\x11HeartbeatResponse\x12\x0f\n\x07version\x18\x01 \x01(\t"4\n\x15RegisterWorkerRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t2\xa4\x01\n\x0b\x43oordinator\x12\x45\n\tHeartbeat\x12\x16.google.protobuf.Empty\x1a\x1e.coordinator.HeartbeatResponse"\x00\x12N\n\x0eRegisterWorker\x12".coordinator.RegisterWorkerRequest\x1a\x16.google.protobuf.Empty"\x00\x62\x06proto3'
+    b'\n\x11\x63oordinator.proto\x12\x0b\x63oordinator\x1a\x1bgoogle/protobuf/empty.proto"$\n\x11HeartbeatResponse\x12\x0f\n\x07version\x18\x01 \x01(\t"4\n\x15RegisterWorkerRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t"`\n\x12\x43reateChunkRequest\x12\x11\n\tnamespace\x18\x01 \x01(\t\x12\x13\n\x0b\x64ocument_id\x18\x02 \x01(\t\x12"\n\x06\x63hunks\x18\x03 \x03(\x0b\x32\x12.coordinator.Chunk"8\n\x05\x43hunk\x12\x0c\n\x04page\x18\x01 \x01(\r\x12\x10\n\x08headings\x18\x02 \x03(\t\x12\x0f\n\x07\x63ontent\x18\x03 \x01(\t2\xee\x01\n\x0b\x43oordinator\x12\x45\n\tHeartbeat\x12\x16.google.protobuf.Empty\x1a\x1e.coordinator.HeartbeatResponse"\x00\x12N\n\x0eRegisterWorker\x12".coordinator.RegisterWorkerRequest\x1a\x16.google.protobuf.Empty"\x00\x12H\n\x0b\x43reateChunk\x12\x1f.coordinator.CreateChunkRequest\x1a\x16.google.protobuf.Empty"\x00\x62\x06proto3'
 )
 
 _globals = globals()
@@ -34,6 +34,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
     _globals["_HEARTBEATRESPONSE"]._serialized_end = 99
     _globals["_REGISTERWORKERREQUEST"]._serialized_start = 101
     _globals["_REGISTERWORKERREQUEST"]._serialized_end = 153
-    _globals["_COORDINATOR"]._serialized_start = 156
-    _globals["_COORDINATOR"]._serialized_end = 320
+    _globals["_CREATECHUNKREQUEST"]._serialized_start = 155
+    _globals["_CREATECHUNKREQUEST"]._serialized_end = 251
+    _globals["_CHUNK"]._serialized_start = 253
+    _globals["_CHUNK"]._serialized_end = 309
+    _globals["_COORDINATOR"]._serialized_start = 312
+    _globals["_COORDINATOR"]._serialized_end = 550
 # @@protoc_insertion_point(module_scope)
