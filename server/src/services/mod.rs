@@ -1,21 +1,17 @@
+mod coordinator;
 pub mod interface;
 
-mod coordinator;
-mod queue;
-mod storage;
-
+use crate::core::queue::Queue;
+use crate::core::storage::Storage;
 use crate::protos;
 use crate::types::*;
-
 use axum::http::StatusCode;
 use interface::ErrorResponse;
-use queue::Queue;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::sync::Arc;
-use storage::Storage;
 use tokio::sync::Mutex;
 use url::Url;
 use uuid::Uuid;
@@ -89,6 +85,18 @@ impl Service {
         }
 
         Ok(())
+    }
+
+    /// Validates that ID is a valid UUID.
+    pub fn validate_uuid(
+        &self,
+        id: impl AsRef<str>,
+    ) -> Result<Uuid, ErrorResponse> {
+        Uuid::parse_str(id.as_ref()).map_err(|_| ErrorResponse {
+            code: StatusCode::BAD_REQUEST,
+            message: String::from("Please provide a valid UUID."),
+            solution: None,
+        })
     }
 
     /// Adds a worker to the list of workers if it doesn't already exist.

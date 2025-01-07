@@ -1,5 +1,4 @@
-use super::interface::ErrorResponse;
-use crate::types::ExtractionTask;
+use super::*;
 use axum::http::StatusCode;
 use lapin::options::{BasicPublishOptions, QueueDeclareOptions};
 use lapin::types::FieldTable;

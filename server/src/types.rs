@@ -125,7 +125,9 @@ impl Namespace {
 
             CREATE TABLE IF NOT EXISTS {schema}.chunks (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                document_id UUID NOT NULL ,
+                document_id UUID NOT NULL,
+                page INTEGER,
+                headings TEXT[],
                 content TEXT NOT NULL,
                 semantic_vector VECTOR(1536) NOT NULL,
                 text_vector TSVECTOR NOT NULL,

@@ -195,14 +195,7 @@ pub async fn remove_document(
 ) -> Result<SuccessResponse<Option<Document>>, ErrorResponse> {
     service.validate_secret(bearer.token())?;
     let namespace = service.get_namespace(name).await?;
-
-    let id = Uuid::parse_str(&id).map_err(|_| ErrorResponse {
-        code: StatusCode::BAD_REQUEST,
-        message: "Please provide a valid document ID.".to_string(),
-        solution: Some(String::from(
-            "A document ID should be in the form of UUID.",
-        )),
-    })?;
+    let id = service.validate_uuid(&id)?;
 
     let document = service.remove_document(&namespace, &id).await?;
     if let Some(document) = &document {

@@ -28,20 +28,9 @@ impl Coordinator for Arc<Service> {
         request: Request<protos::UpdateDocumentRequest>,
     ) -> Result<Response<()>, Status> {
         let request = request.into_inner();
-        let namespace = self.get_namespace(&request.namespace).await.ok();
-        let namespace = match namespace {
-            Some(namespace) => namespace,
-            None => {
-                let ns = &request.namespace;
-                let message = format!("Unable to retrieve the namespace: {ns}");
-                return Err(Status::not_found(message));
-            },
-        };
-
+        let namespace = self.get_namespace(&request.namespace).await?;
+        let id = self.validate_uuid(&request.document_id)?;
         let status = DocumentStatus::from(request.status());
-        let id = Uuid::parse_str(&request.document_id).map_err(|_| {
-            Status::invalid_argument("Document ID must be a valid UUID.")
-        })?;
 
         let schema = namespace.schema();
         sqlx::query(&format!(
@@ -64,9 +53,25 @@ impl Coordinator for Arc<Service> {
 
     async fn create_chunk(
         &self,
-        _request: Request<protos::CreateChunkRequest>,
+        request: Request<protos::CreateChunkRequest>,
     ) -> Result<Response<()>, Status> {
+        let request = request.into_inner();
+        let namespace = self.get_namespace(&request.namespace).await?;
+        let id = self.validate_uuid(&request.document_id)?;
+        let chunks = request.chunks;
+
         unimplemented!()
+    }
+}
+
+impl From<ErrorResponse> for Status {
+    fn from(error: ErrorResponse) -> Self {
+        let message = error.message;
+        match error.code {
+            StatusCode::NOT_FOUND => Status::not_found(message),
+            StatusCode::INTERNAL_SERVER_ERROR => Status::internal(message),
+            _ => Status::invalid_argument(message),
+        }
     }
 }
 

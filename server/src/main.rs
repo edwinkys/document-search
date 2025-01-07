@@ -1,3 +1,4 @@
+mod core;
 mod protos;
 mod services;
 mod types;

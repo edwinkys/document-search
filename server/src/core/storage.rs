@@ -1,4 +1,4 @@
-use super::interface::ErrorResponse;
+use super::*;
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::Client;
 use axum::http::StatusCode;
