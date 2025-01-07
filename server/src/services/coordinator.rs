@@ -23,6 +23,45 @@ impl Coordinator for Arc<Service> {
         Ok(Response::new(()))
     }
 
+    async fn update_document(
+        &self,
+        request: Request<protos::UpdateDocumentRequest>,
+    ) -> Result<Response<()>, Status> {
+        let request = request.into_inner();
+        let namespace = self.get_namespace(&request.namespace).await.ok();
+        let namespace = match namespace {
+            Some(namespace) => namespace,
+            None => {
+                let ns = &request.namespace;
+                let message = format!("Unable to retrieve the namespace: {ns}");
+                return Err(Status::not_found(message));
+            },
+        };
+
+        let status = DocumentStatus::from(request.status());
+        let id = Uuid::parse_str(&request.document_id).map_err(|_| {
+            Status::invalid_argument("Document ID must be a valid UUID.")
+        })?;
+
+        let schema = namespace.schema();
+        sqlx::query(&format!(
+            "UPDATE {schema}.documents
+            SET status = $2
+            WHERE id = $1;",
+        ))
+        .bind(&id)
+        .bind(&status)
+        .execute(&self.pool)
+        .await
+        .map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to update the document: {_e:?}");
+            Status::internal("Failed to update the document.")
+        })?;
+
+        Ok(Response::new(()))
+    }
+
     async fn create_chunk(
         &self,
         _request: Request<protos::CreateChunkRequest>,
@@ -58,9 +97,48 @@ mod tests {
         assert_eq!(workers.len(), 1);
     }
 
+    #[tokio::test]
+    async fn test_update_document() {
+        let service = setup().await;
+        let namespace = setup_namespace(service.clone()).await;
+
+        let metadata = serde_json::json!({});
+        let document = service
+            .create_document(&namespace, &metadata)
+            .await
+            .unwrap();
+
+        let request = Request::new(protos::UpdateDocumentRequest {
+            namespace: namespace.name.clone(),
+            document_id: document.id.to_string(),
+            status: protos::DocumentStatus::Processing as i32,
+        });
+
+        service.update_document(request).await.unwrap();
+
+        let schema = namespace.schema();
+        let _document: Document = sqlx::query_as(&format!(
+            "SELECT * FROM {schema}.documents
+            WHERE id = $1;",
+        ))
+        .bind(&document.id)
+        .fetch_one(&service.pool)
+        .await
+        .unwrap();
+
+        assert_eq!(_document.status, DocumentStatus::Processing);
+    }
+
     async fn setup() -> Arc<Service> {
         dotenv().ok();
         let config = Configuration::default();
         Arc::new(Service::new(&config).await)
+    }
+
+    async fn setup_namespace(service: Arc<Service>) -> Namespace {
+        let name = "coordinator_ns";
+        let config = NamespaceConfig::default();
+        let _ = service.remove_namespace(name).await;
+        service.create_namespace(name, &config).await.unwrap()
     }
 }

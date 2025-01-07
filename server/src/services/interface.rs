@@ -9,7 +9,6 @@ use axum_extra::headers::authorization::{Authorization, Bearer};
 use axum_extra::TypedHeader;
 use regex::bytes::Regex;
 use serde_json::json;
-use uuid::Uuid;
 
 pub fn create_router(service: Arc<Service>) -> Router {
     Router::new()

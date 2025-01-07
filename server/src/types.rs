@@ -182,6 +182,29 @@ pub enum DocumentStatus {
     Failed,
 }
 
+impl From<protos::DocumentStatus> for DocumentStatus {
+    fn from(value: protos::DocumentStatus) -> Self {
+        type Status = protos::DocumentStatus;
+        match value {
+            Status::Pending => Self::Pending,
+            Status::Processing => Self::Processing,
+            Status::Completed => Self::Completed,
+            Status::Failed => Self::Failed,
+        }
+    }
+}
+
+impl From<DocumentStatus> for &str {
+    fn from(value: DocumentStatus) -> Self {
+        match value {
+            DocumentStatus::Pending => "pending",
+            DocumentStatus::Processing => "processing",
+            DocumentStatus::Completed => "completed",
+            DocumentStatus::Failed => "failed",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Document {
     pub id: DocumentID,

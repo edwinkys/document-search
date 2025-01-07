@@ -18,6 +18,7 @@ use std::sync::Arc;
 use storage::Storage;
 use tokio::sync::Mutex;
 use url::Url;
+use uuid::Uuid;
 
 const QUEUE_NAME: &str = "tasks";
 
