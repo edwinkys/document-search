@@ -4,16 +4,16 @@ use aws_sdk_s3::Client;
 use axum::http::StatusCode;
 
 #[derive(Debug)]
-pub struct Storage {
+pub struct StorageAPI {
     bucket: String,
     client: Client,
 }
 
-impl Storage {
+impl StorageAPI {
     /// Creates an instance of the storage layer.
     pub async fn new(bucket: impl AsRef<str>) -> Self {
         let config = aws_config::load_from_env().await;
-        let storage = Storage {
+        let storage = StorageAPI {
             bucket: bucket.as_ref().to_string(),
             client: Client::new(&config),
         };

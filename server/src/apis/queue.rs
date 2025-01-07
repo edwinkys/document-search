@@ -5,12 +5,12 @@ use lapin::types::FieldTable;
 use lapin::{BasicProperties, Channel, Connection, ConnectionProperties};
 
 #[derive(Debug)]
-pub struct Queue {
+pub struct QueueAPI {
     name: String,
     channel: Channel,
 }
 
-impl Queue {
+impl QueueAPI {
     /// Creates a new instance of the task queue.
     pub async fn new(name: impl AsRef<str>, url: impl AsRef<str>) -> Self {
         let url = url.as_ref();
@@ -32,7 +32,7 @@ impl Queue {
             .await
             .expect("Failed to declare a queue");
 
-        Queue {
+        QueueAPI {
             name: name.to_string(),
             channel,
         }
@@ -72,7 +72,7 @@ mod tests {
     use super::*;
     use lapin::options::QueuePurgeOptions;
 
-    impl Queue {
+    impl QueueAPI {
         /// Removes all messages from the queue.
         pub async fn purge(&self) -> Result<(), ErrorResponse> {
             let name = self.name.as_str();

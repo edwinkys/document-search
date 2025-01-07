@@ -1,8 +1,7 @@
 mod coordinator;
 pub mod interface;
 
-use crate::core::queue::Queue;
-use crate::core::storage::Storage;
+use crate::apis::{QueueAPI, StorageAPI};
 use crate::protos;
 use crate::types::*;
 use axum::http::StatusCode;
@@ -46,10 +45,10 @@ impl Default for Configuration {
 #[derive(Debug)]
 pub struct Service {
     config: Configuration,
-    pool: PgPool,
-    queue: Queue,
-    storage: Storage,
     workers: Mutex<Vec<Worker>>,
+    storage: StorageAPI,
+    queue: QueueAPI,
+    pool: PgPool,
 }
 
 impl Service {
@@ -64,8 +63,8 @@ impl Service {
         Service {
             config: config.clone(),
             workers: Mutex::new(Vec::new()),
-            queue: Queue::new(QUEUE_NAME, config.queue_url.as_str()).await,
-            storage: Storage::new(&config.bucket).await,
+            queue: QueueAPI::new(QUEUE_NAME, config.queue_url.as_str()).await,
+            storage: StorageAPI::new(&config.bucket).await,
             pool,
         }
     }

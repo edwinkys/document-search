@@ -1,4 +1,4 @@
-mod core;
+mod apis;
 mod protos;
 mod services;
 mod types;
