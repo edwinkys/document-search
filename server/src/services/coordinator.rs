@@ -40,7 +40,7 @@ impl Coordinator for Arc<Service> {
         ))
         .bind(&id)
         .bind(&status)
-        .execute(&self.pool)
+        .execute(&self.database)
         .await
         .map_err(|_e| {
             #[cfg(test)]
@@ -127,7 +127,7 @@ mod tests {
             WHERE id = $1;",
         ))
         .bind(&document.id)
-        .fetch_one(&service.pool)
+        .fetch_one(&service.database)
         .await
         .unwrap();
 

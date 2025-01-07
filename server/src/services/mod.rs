@@ -48,7 +48,7 @@ pub struct Service {
     workers: Mutex<Vec<Worker>>,
     storage: StorageAPI,
     queue: QueueAPI,
-    pool: PgPool,
+    database: PgPool,
 }
 
 impl Service {
@@ -63,9 +63,9 @@ impl Service {
         Service {
             config: config.clone(),
             workers: Mutex::new(Vec::new()),
-            queue: QueueAPI::new(QUEUE_NAME, config.queue_url.as_str()).await,
             storage: StorageAPI::new(&config.bucket).await,
-            pool,
+            queue: QueueAPI::new(QUEUE_NAME, config.queue_url.as_str()).await,
+            database: pool,
         }
     }
 
@@ -135,7 +135,7 @@ impl Service {
         )
         .bind(name)
         .bind(&config)
-        .fetch_one(&self.pool)
+        .fetch_one(&self.database)
         .await
         .map_err(|_e| {
             #[cfg(test)]
@@ -149,7 +149,7 @@ impl Service {
             }
         })?;
 
-        namespace.provision(&self.pool).await?;
+        namespace.provision(&self.database).await?;
         Ok(namespace)
     }
 
@@ -165,7 +165,7 @@ impl Service {
             RETURNING *;",
         )
         .bind(name)
-        .fetch_optional(&self.pool)
+        .fetch_optional(&self.database)
         .await
         .map_err(|_| ErrorResponse {
             code: StatusCode::BAD_REQUEST,
@@ -174,7 +174,7 @@ impl Service {
         })?;
 
         if let Some(namespace) = &namespace {
-            namespace.teardown(&self.pool).await?;
+            namespace.teardown(&self.database).await?;
         }
 
         Ok(namespace)
@@ -191,7 +191,7 @@ impl Service {
             WHERE name = $1;",
         )
         .bind(name)
-        .fetch_optional(&self.pool)
+        .fetch_optional(&self.database)
         .await
         .map_err(|_| ErrorResponse {
             code: StatusCode::BAD_REQUEST,
@@ -225,7 +225,7 @@ impl Service {
             RETURNING *;",
         ))
         .bind(metadata)
-        .fetch_one(&self.pool)
+        .fetch_one(&self.database)
         .await
         .map_err(|_e| {
             #[cfg(test)]
@@ -253,7 +253,7 @@ impl Service {
             RETURNING *;",
         ))
         .bind(id)
-        .fetch_optional(&self.pool)
+        .fetch_optional(&self.database)
         .await
         .map_err(|_e| {
             #[cfg(test)]

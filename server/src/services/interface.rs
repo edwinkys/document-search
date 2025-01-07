@@ -342,7 +342,7 @@ mod tests {
 
         let namespaces: Vec<Namespace> =
             sqlx::query_as("SELECT * FROM namespaces")
-                .fetch_all(&state.pool)
+                .fetch_all(&state.database)
                 .await
                 .unwrap();
 
