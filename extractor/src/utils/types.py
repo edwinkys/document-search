@@ -11,8 +11,16 @@ class HeartbeatResponse:
     def __init__(self, version: str):
         self.version = version
 
-    def __str__(self):
-        return f"version: {self.version}"
+
+class Chunk:
+    page: int
+    headings: list[str]
+    content: str
+
+    def __init__(self, page: int, headings: list[str], content: str):
+        self.page = page
+        self.headings = headings
+        self.content = content
 
 
 class ExtractionTask:

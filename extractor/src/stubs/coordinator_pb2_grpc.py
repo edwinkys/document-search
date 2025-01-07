@@ -56,6 +56,12 @@ class CoordinatorStub(object):
             response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             _registered_method=True,
         )
+        self.UpdateDocument = channel.unary_unary(
+            "/coordinator.Coordinator/UpdateDocument",
+            request_serializer=coordinator__pb2.UpdateDocumentRequest.SerializeToString,
+            response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            _registered_method=True,
+        )
         self.CreateChunk = channel.unary_unary(
             "/coordinator.Coordinator/CreateChunk",
             request_serializer=coordinator__pb2.CreateChunkRequest.SerializeToString,
@@ -85,6 +91,12 @@ class CoordinatorServicer(object):
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
 
+    def UpdateDocument(self, request, context):
+        """Updates the document record in the database."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
+
     def CreateChunk(self, request, context):
         """Creates chunk records from the extracted document content."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -102,6 +114,11 @@ def add_CoordinatorServicer_to_server(servicer, server):
         "RegisterWorker": grpc.unary_unary_rpc_method_handler(
             servicer.RegisterWorker,
             request_deserializer=coordinator__pb2.RegisterWorkerRequest.FromString,
+            response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+        ),
+        "UpdateDocument": grpc.unary_unary_rpc_method_handler(
+            servicer.UpdateDocument,
+            request_deserializer=coordinator__pb2.UpdateDocumentRequest.FromString,
             response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
         ),
         "CreateChunk": grpc.unary_unary_rpc_method_handler(
@@ -177,6 +194,36 @@ class Coordinator(object):
             target,
             "/coordinator.Coordinator/RegisterWorker",
             coordinator__pb2.RegisterWorkerRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True,
+        )
+
+    @staticmethod
+    def UpdateDocument(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            "/coordinator.Coordinator/UpdateDocument",
+            coordinator__pb2.UpdateDocumentRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,

@@ -8,7 +8,8 @@ from aio_pika.abc import AbstractIncomingMessage
 from rich.console import Console
 from uuid import UUID
 from ..utils.coordinator import Coordinator
-from ..utils.types import ExtractionTask
+from ..utils.extraction import Extraction
+from ..utils.types import ExtractionTask, Chunk
 
 QUEUE_NAME = "tasks"
 SLEEP = 5
@@ -72,7 +73,14 @@ async def async_loop():
             message = await queue.get(no_ack=False, fail=False)
             if message is not None:
                 async with message.process(ignore_processed=True):
-                    await process_message(message)
+                    body = json.loads(message.body.decode())
+                    coordinator.update_document(
+                        namespace=body["namespace"],
+                        id=body["document_id"],
+                        status="processing",
+                    )
+
+                    chunks = await process_message(message)
 
         await asyncio.sleep(SLEEP)
 
@@ -82,7 +90,7 @@ def external_ip_address() -> str:
     return response.json()["ip"]
 
 
-async def process_message(message: AbstractIncomingMessage):
+async def process_message(message: AbstractIncomingMessage) -> list[Chunk]:
     async with message.process():
         # The message is a JSON string.
         # Check server/src/types.rs for the structure of the message.
@@ -96,4 +104,9 @@ async def process_message(message: AbstractIncomingMessage):
         console.log(f"INFO: Processing document {task.document_id}...")
         path = task.download_document()
 
+        extraction = Extraction(path)
+        results = extraction.extract()
+        console.log(f"INFO: Extracted {len(results)} chunks from the document")
+
         task.cleanup()
+        return results

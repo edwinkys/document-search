@@ -19,3 +19,13 @@ class Coordinator:
     def register_worker(self, id: str, address: str):
         request = protos.RegisterWorkerRequest(id=id, address=address)
         self.connection.RegisterWorker(request=request)
+
+    def update_document(self, namespace: str, id: str, status: str):
+        status = protos.DocumentStatus.Value(status.upper())
+        request = protos.UpdateDocumentRequest(
+            namespace=namespace,
+            id=id,
+            status=status,
+        )
+
+        self.connection.UpdateDocument(request=request)

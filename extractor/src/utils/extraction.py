@@ -1,6 +1,6 @@
 from docling.document_converter import DocumentConverter
 from docling_core.transforms.chunker.hybrid_chunker import HybridChunker
-from ..stubs import coordinator_pb2 as protos
+from .types import Chunk
 
 
 class Extraction:
@@ -11,7 +11,7 @@ class Extraction:
         self.path = path
         self.tokenizer = tokenizer
 
-    def extract(self) -> list[protos.Chunk]:
+    def extract(self) -> list[Chunk]:
         converter = DocumentConverter()
         chunker = HybridChunker(tokenizer=self.tokenizer)
 
@@ -28,12 +28,7 @@ class Extraction:
                 provs = doc_items[0].get("prov", [])
                 page = provs[0].get("page_no", 0) if len(provs) > 0 else 0
 
-            chunks.append(
-                protos.Chunk(
-                    page=page,
-                    headings=meta.get("headings", []),
-                    content=chunk.text,
-                )
-            )
+            headings = meta.get("headings", [])
+            chunks.append(Chunk(page, headings, chunk.text))
 
         return chunks
