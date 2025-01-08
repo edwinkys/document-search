@@ -78,6 +78,18 @@ impl EmbeddingConfig {
             _ => 1536,
         }
     }
+
+    /// Returns the callable model for the embedding provider.
+    pub fn model(&self) -> Result<Box<dyn EmbeddingModel>, ErrorResponse> {
+        let model: Box<dyn EmbeddingModel> = match self.provider {
+            EmbeddingProvider::OpenAI => {
+                let model = &self.model;
+                Box::new(EmbeddingOpenAI::new(model)?)
+            },
+        };
+
+        Ok(model)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -136,17 +148,6 @@ impl Namespace {
         let id = self.id.simple().to_string();
         let schema = id.split_at(12).0;
         format!("ns_{schema}")
-    }
-
-    /// Returns the embedding model for the namespace.
-    pub fn embedding_model(&self) -> Box<dyn EmbeddingModel> {
-        let config = &self.config.embedding;
-        match config.provider {
-            EmbeddingProvider::OpenAI => {
-                let model = &config.model;
-                Box::new(EmbeddingOpenAI::new(model))
-            },
-        }
     }
 
     /// Provisions the namespace with the required schema tables and indexes.

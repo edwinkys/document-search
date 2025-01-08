@@ -108,6 +108,7 @@ setup_server:
 	@echo "AWS_ACCESS_KEY_ID=xxx" >> server/.env
 	@echo "AWS_SECRET_ACCESS_KEY=xxx" >> server/.env
 	@echo "AWS_REGION=us-east-1" >> server/.env
+	@echo "OPENAI_API_KEY=xxx" >> server/.env
 
 	@cd server && cargo run migrate
 	@echo "$(GREEN)Server environment setup complete:$(RESET)"

@@ -103,6 +103,9 @@ async fn create_namespace(
                 )),
             }
         })?;
+
+        // This validates the provided embedding model to be valid.
+        config.embedding.model()?;
     }
 
     let namespace = service.create_namespace(&payload.name, &config).await?;

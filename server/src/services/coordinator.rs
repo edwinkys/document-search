@@ -59,7 +59,7 @@ impl Coordinator for Arc<Service> {
         let namespace = self.get_namespace(&request.namespace).await?;
         let document_id = self.validate_uuid(&request.document_id)?;
 
-        let embedding_model = namespace.embedding_model();
+        let embedding_model = namespace.config.embedding.model()?;
         let mut embeddings = Vec::new();
         for chunk in &request.chunks {
             let embedding = embedding_model.generate(&chunk.content).await?;

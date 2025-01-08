@@ -4,6 +4,7 @@ pub use openai::EmbeddingOpenAI;
 
 use crate::services::interface::ErrorResponse;
 use async_trait::async_trait;
+use axum::http::StatusCode;
 use std::env;
 
 pub type DenseVector = Vec<f32>;
