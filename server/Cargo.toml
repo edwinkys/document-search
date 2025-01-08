@@ -33,6 +33,7 @@ reqwest = "0.12.11"
 dotenv = "0.15.0"
 semver = "1.0.24"
 regex = "1.11.1"
+async-trait = "0.1.85"
 
 [dependencies.sqlx]
 version = "0.8.2"

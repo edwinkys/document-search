@@ -1,4 +1,5 @@
 mod apis;
+mod embeddings;
 mod protos;
 mod services;
 mod types;

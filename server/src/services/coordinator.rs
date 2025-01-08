@@ -57,8 +57,14 @@ impl Coordinator for Arc<Service> {
     ) -> Result<Response<()>, Status> {
         let request = request.into_inner();
         let namespace = self.get_namespace(&request.namespace).await?;
-        let id = self.validate_uuid(&request.document_id)?;
-        let chunks = request.chunks;
+        let document_id = self.validate_uuid(&request.document_id)?;
+
+        let embedding_model = namespace.embedding_model();
+        let mut embeddings = Vec::new();
+        for chunk in &request.chunks {
+            let embedding = embedding_model.generate(&chunk.content).await?;
+            embeddings.push(embedding);
+        }
 
         unimplemented!()
     }

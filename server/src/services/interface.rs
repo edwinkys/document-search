@@ -251,7 +251,11 @@ mod tests {
         let payload = json!({
             "name": "test_ns",
             "config": {
-                "index": { "m": 16, "ef_construction": 64 }
+                "index": { "m": 16, "ef_construction": 64 },
+                "embedding": {
+                    "provider": "OpenAI",
+                    "model": "text-embedding-ada-002"
+                }
             }
         });
 

@@ -1,3 +1,4 @@
+use crate::embeddings::*;
 use crate::protos;
 use crate::services::interface::ErrorResponse;
 use axum::http::StatusCode;
@@ -46,6 +47,39 @@ pub struct ExtractionTask {
     pub document_id: DocumentID,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum EmbeddingProvider {
+    OpenAI,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EmbeddingConfig {
+    pub provider: EmbeddingProvider,
+    pub model: String,
+}
+
+impl Default for EmbeddingConfig {
+    fn default() -> Self {
+        EmbeddingConfig {
+            provider: EmbeddingProvider::OpenAI,
+            model: "text-embedding-3-small".to_string(),
+        }
+    }
+}
+
+impl EmbeddingConfig {
+    /// Returns the vector dimension of the embedding model.
+    pub fn dimension(&self) -> usize {
+        type Provider = EmbeddingProvider;
+        match (self.provider, self.model.as_str()) {
+            (Provider::OpenAI, "text-embedding-ada-002") => 1536,
+            (Provider::OpenAI, "text-embedding-3-small") => 1536,
+            (Provider::OpenAI, "text-embedding-3-large") => 3072,
+            _ => 1536,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IndexConfig {
     pub m: u8,
@@ -64,6 +98,7 @@ impl Default for IndexConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NamespaceConfig {
     pub index: IndexConfig,
+    pub embedding: EmbeddingConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -103,10 +138,22 @@ impl Namespace {
         format!("ns_{schema}")
     }
 
+    /// Returns the embedding model for the namespace.
+    pub fn embedding_model(&self) -> Box<dyn EmbeddingModel> {
+        let config = &self.config.embedding;
+        match config.provider {
+            EmbeddingProvider::OpenAI => {
+                let model = &config.model;
+                Box::new(EmbeddingOpenAI::new(model))
+            },
+        }
+    }
+
     /// Provisions the namespace with the required schema tables and indexes.
     pub async fn provision(&self, pool: &PgPool) -> Result<(), ErrorResponse> {
         let m = self.config.index.m;
         let ef_construction = self.config.index.ef_construction;
+        let dimension = self.config.embedding.dimension();
 
         let schema = self.schema();
         let query = format!(
@@ -129,7 +176,7 @@ impl Namespace {
                 page INTEGER,
                 headings TEXT[],
                 content TEXT NOT NULL,
-                semantic_vector VECTOR(1536) NOT NULL,
+                semantic_vector VECTOR({dimension}) NOT NULL,
                 text_vector TSVECTOR NOT NULL,
 
                 FOREIGN KEY (document_id)
