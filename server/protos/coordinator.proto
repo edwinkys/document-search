@@ -56,6 +56,5 @@ message CreateChunkRequest {
 
 message Chunk {
     uint32 page = 1;
-    repeated string headings = 2;
     string content = 3;
 }

@@ -175,7 +175,6 @@ impl Namespace {
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 document_id UUID NOT NULL,
                 page INTEGER,
-                headings TEXT[],
                 content TEXT NOT NULL,
                 semantic_vector VECTOR({dimension}) NOT NULL,
                 text_vector TSVECTOR NOT NULL,
@@ -281,6 +280,19 @@ impl Document {
     pub fn key(&self, namespace: &Namespace) -> String {
         format!("{}/{}.pdf", namespace.schema(), self.id)
     }
+}
+
+/// Extracted content chunk from a document.
+///
+/// When querying the database, we exclude retrieving the vector columns as
+/// they are not needed for most operations. That's why when querying as this
+/// type, we only specify the columns listed in the struct.
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct Chunk {
+    pub id: Uuid,
+    pub document_id: Uuid,
+    pub page: i32,
+    pub content: String,
 }
 
 #[cfg(test)]

@@ -38,7 +38,7 @@ impl Coordinator for Arc<Service> {
             SET status = $2
             WHERE id = $1;",
         ))
-        .bind(&id)
+        .bind(id)
         .bind(&status)
         .execute(&self.database)
         .await
@@ -59,14 +59,61 @@ impl Coordinator for Arc<Service> {
         let namespace = self.get_namespace(&request.namespace).await?;
         let document_id = self.validate_uuid(&request.document_id)?;
 
-        let embedding_model = namespace.config.embedding.model()?;
+        let model = namespace.config.embedding.model()?;
         let mut embeddings = Vec::new();
         for chunk in &request.chunks {
-            let embedding = embedding_model.generate(&chunk.content).await?;
+            let embedding = model.generate(&chunk.content).await?;
             embeddings.push(embedding);
         }
 
-        unimplemented!()
+        let mut tx = self.database.begin().await.map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to start a transaction: {_e:?}");
+            Status::internal("Failed to start a transaction.")
+        })?;
+
+        let schema = namespace.schema();
+        for (chunk, embedding) in request.chunks.iter().zip(embeddings) {
+            sqlx::query(&format!(
+                "INSERT INTO {schema}.chunks
+                (document_id, page, content, semantic_vector, text_vector) VALUES ($1, $2, $3, $4, to_tsvector('english', $5));",
+            ))
+            .bind(document_id)
+            .bind(chunk.page as i32)
+            .bind(&chunk.content)
+            .bind(embedding)
+            .bind(&chunk.content)
+            .execute(&mut *tx)
+            .await
+            .map_err(|_e| {
+                #[cfg(test)]
+                eprintln!("Failed to create a chunk: {_e:?}");
+                Status::internal("Failed to create a chunk.")
+            })?;
+        }
+
+        sqlx::query(&format!(
+            "UPDATE {schema}.documents
+            SET status = $2
+            WHERE id = $1;",
+        ))
+        .bind(document_id)
+        .bind(DocumentStatus::Completed)
+        .execute(&mut *tx)
+        .await
+        .map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to create a chunk: {_e:?}");
+            Status::internal("Failed to create a chunk.")
+        })?;
+
+        tx.commit().await.map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to commit the transaction: {_e:?}");
+            Status::internal("Failed to commit the transaction.")
+        })?;
+
+        Ok(Response::new(()))
     }
 }
 
@@ -138,6 +185,42 @@ mod tests {
         .unwrap();
 
         assert_eq!(_document.status, DocumentStatus::Processing);
+    }
+
+    #[tokio::test]
+    async fn test_create_chunk() {
+        let service = setup().await;
+        let namespace = setup_namespace(service.clone()).await;
+
+        let metadata = serde_json::json!({});
+        let document = service
+            .create_document(&namespace, &metadata)
+            .await
+            .unwrap();
+
+        let request = Request::new(protos::CreateChunkRequest {
+            namespace: namespace.name.clone(),
+            document_id: document.id.to_string(),
+            chunks: vec![protos::Chunk {
+                page: 1,
+                content: "DocuLens is a robust search API platform for PDFs."
+                    .to_string(),
+            }],
+        });
+
+        service.create_chunk(request).await.unwrap();
+
+        let schema = namespace.schema();
+        let chunks: Vec<Chunk> = sqlx::query_as(&format!(
+            "SELECT id, document_id, page, content FROM {schema}.chunks
+            WHERE document_id = $1;",
+        ))
+        .bind(&document.id)
+        .fetch_all(&service.database)
+        .await
+        .unwrap();
+
+        assert_eq!(chunks.len(), 1);
     }
 
     async fn setup() -> Arc<Service> {
