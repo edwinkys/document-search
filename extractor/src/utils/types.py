@@ -15,18 +15,15 @@ class HeartbeatResponse:
 
 class Chunk:
     page: int
-    headings: list[str]
     content: str
 
-    def __init__(self, page: int, headings: list[str], content: str):
+    def __init__(self, page: int, content: str):
         self.page = page
-        self.headings = headings
         self.content = content
 
     def to_proto(self) -> protos.Chunk:
         return protos.Chunk(
             page=self.page,
-            headings=self.headings,
             content=self.content,
         )
 

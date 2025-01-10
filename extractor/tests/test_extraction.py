@@ -11,4 +11,4 @@ def test_extraction_extract():
 
     assert len(results) == 1
     assert results[0].page == 1
-    assert results[0].headings == ["Product Quantization"]
+    assert "PQ" in results[0].content

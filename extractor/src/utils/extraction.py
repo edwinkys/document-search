@@ -28,7 +28,6 @@ class Extraction:
                 provs = doc_items[0].get("prov", [])
                 page = provs[0].get("page_no", 0) if len(provs) > 0 else 0
 
-            headings = meta.get("headings", [])
-            chunks.append(Chunk(page, headings, chunk.text))
+            chunks.append(Chunk(page, chunk.text))
 
         return chunks

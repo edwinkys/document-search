@@ -22,7 +22,7 @@ from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
-    b'\n\x11\x63oordinator.proto\x12\x0b\x63oordinator\x1a\x1bgoogle/protobuf/empty.proto"$\n\x11HeartbeatResponse\x12\x0f\n\x07version\x18\x01 \x01(\t"4\n\x15RegisterWorkerRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t"l\n\x15UpdateDocumentRequest\x12\x11\n\tnamespace\x18\x01 \x01(\t\x12\x13\n\x0b\x64ocument_id\x18\x02 \x01(\t\x12+\n\x06status\x18\x03 \x01(\x0e\x32\x1b.coordinator.DocumentStatus"`\n\x12\x43reateChunkRequest\x12\x11\n\tnamespace\x18\x01 \x01(\t\x12\x13\n\x0b\x64ocument_id\x18\x02 \x01(\t\x12"\n\x06\x63hunks\x18\x03 \x03(\x0b\x32\x12.coordinator.Chunk"8\n\x05\x43hunk\x12\x0c\n\x04page\x18\x01 \x01(\r\x12\x10\n\x08headings\x18\x02 \x03(\t\x12\x0f\n\x07\x63ontent\x18\x03 \x01(\t*H\n\x0e\x44ocumentStatus\x12\x0b\n\x07PENDING\x10\x00\x12\x0e\n\nPROCESSING\x10\x01\x12\r\n\tCOMPLETED\x10\x02\x12\n\n\x06\x46\x41ILED\x10\x03\x32\xbe\x02\n\x0b\x43oordinator\x12\x45\n\tHeartbeat\x12\x16.google.protobuf.Empty\x1a\x1e.coordinator.HeartbeatResponse"\x00\x12N\n\x0eRegisterWorker\x12".coordinator.RegisterWorkerRequest\x1a\x16.google.protobuf.Empty"\x00\x12N\n\x0eUpdateDocument\x12".coordinator.UpdateDocumentRequest\x1a\x16.google.protobuf.Empty"\x00\x12H\n\x0b\x43reateChunk\x12\x1f.coordinator.CreateChunkRequest\x1a\x16.google.protobuf.Empty"\x00\x62\x06proto3'
+    b'\n\x11\x63oordinator.proto\x12\x0b\x63oordinator\x1a\x1bgoogle/protobuf/empty.proto"$\n\x11HeartbeatResponse\x12\x0f\n\x07version\x18\x01 \x01(\t"4\n\x15RegisterWorkerRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t"l\n\x15UpdateDocumentRequest\x12\x11\n\tnamespace\x18\x01 \x01(\t\x12\x13\n\x0b\x64ocument_id\x18\x02 \x01(\t\x12+\n\x06status\x18\x03 \x01(\x0e\x32\x1b.coordinator.DocumentStatus"`\n\x12\x43reateChunkRequest\x12\x11\n\tnamespace\x18\x01 \x01(\t\x12\x13\n\x0b\x64ocument_id\x18\x02 \x01(\t\x12"\n\x06\x63hunks\x18\x03 \x03(\x0b\x32\x12.coordinator.Chunk"&\n\x05\x43hunk\x12\x0c\n\x04page\x18\x01 \x01(\r\x12\x0f\n\x07\x63ontent\x18\x03 \x01(\t*H\n\x0e\x44ocumentStatus\x12\x0b\n\x07PENDING\x10\x00\x12\x0e\n\nPROCESSING\x10\x01\x12\r\n\tCOMPLETED\x10\x02\x12\n\n\x06\x46\x41ILED\x10\x03\x32\xbe\x02\n\x0b\x43oordinator\x12\x45\n\tHeartbeat\x12\x16.google.protobuf.Empty\x1a\x1e.coordinator.HeartbeatResponse"\x00\x12N\n\x0eRegisterWorker\x12".coordinator.RegisterWorkerRequest\x1a\x16.google.protobuf.Empty"\x00\x12N\n\x0eUpdateDocument\x12".coordinator.UpdateDocumentRequest\x1a\x16.google.protobuf.Empty"\x00\x12H\n\x0b\x43reateChunk\x12\x1f.coordinator.CreateChunkRequest\x1a\x16.google.protobuf.Empty"\x00\x62\x06proto3'
 )
 
 _globals = globals()
@@ -30,8 +30,8 @@ _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "coordinator_pb2", _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
     DESCRIPTOR._loaded_options = None
-    _globals["_DOCUMENTSTATUS"]._serialized_start = 421
-    _globals["_DOCUMENTSTATUS"]._serialized_end = 493
+    _globals["_DOCUMENTSTATUS"]._serialized_start = 403
+    _globals["_DOCUMENTSTATUS"]._serialized_end = 475
     _globals["_HEARTBEATRESPONSE"]._serialized_start = 63
     _globals["_HEARTBEATRESPONSE"]._serialized_end = 99
     _globals["_REGISTERWORKERREQUEST"]._serialized_start = 101
@@ -41,7 +41,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
     _globals["_CREATECHUNKREQUEST"]._serialized_start = 265
     _globals["_CREATECHUNKREQUEST"]._serialized_end = 361
     _globals["_CHUNK"]._serialized_start = 363
-    _globals["_CHUNK"]._serialized_end = 419
-    _globals["_COORDINATOR"]._serialized_start = 496
-    _globals["_COORDINATOR"]._serialized_end = 814
+    _globals["_CHUNK"]._serialized_end = 401
+    _globals["_COORDINATOR"]._serialized_start = 478
+    _globals["_COORDINATOR"]._serialized_end = 796
 # @@protoc_insertion_point(module_scope)
