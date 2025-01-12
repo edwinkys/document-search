@@ -59,11 +59,11 @@ Please also follow the existing naming conventions and patterns:
 ## Templates
 
 This directory contains email templates that are used during authentication
-workflows in Supabase. We use Jinja2 templating to generate the email templates.
-If we want to modify the email templates, we can do so by modifying the Jinja2
-templates in the emails directory.
+workflows in Supabase. We use Jinja2 templating to generate these email
+templates from a base template. If we want to modify the email templates, we can
+do so by modifying the Jinja2 templates in the emails directory.
 
-We can run the following command to start working on the email templates:
+We can run the following commands to start working with the email templates:
 
 ```bash
 # Set up the email templates directory for local development.
@@ -122,11 +122,10 @@ cargo fmt
 
 This directory contains the source code for our extractor workers which are
 responsible to extract features from PDF documents. An extractor worker consists
-of 2 processes running in concurrently: **Extraction Loop** and **Embedding
-Generator**.
+of 2 processes running concurrently: **Extraction Loop** and **Embedding API**.
 
 - Extraction Loop: Extracts features from the PDF documents during ingestion.
-- Embedding Generator: Generates embeddings for the retrieval workflow.
+- Embedding API: Generates embeddings for the retrieval workflow.
 
 To get started with developing the extractor, use the following commands:
 
