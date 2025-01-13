@@ -3,6 +3,7 @@ mod embeddings;
 mod protos;
 mod services;
 mod types;
+mod utils;
 
 use clap::{ArgMatches, Command};
 use protos::coordinator_server::CoordinatorServer;
