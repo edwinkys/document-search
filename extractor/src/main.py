@@ -16,9 +16,8 @@ def start_loop():
     try:
         asyncio.run(async_loop())
     except KeyboardInterrupt:
-        console.print(" | Keyboard interruption detected. Stopping...")
+        console.log("Keyboard interruption detected. Stopping the loop...")
         console.log("INFO: The extraction loop has been stopped", style="green")
-        pass
 
 
 def start_api():

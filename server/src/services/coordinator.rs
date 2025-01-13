@@ -35,7 +35,7 @@ impl Coordinator for Arc<Service> {
         let schema = namespace.schema();
         sqlx::query(&format!(
             "UPDATE {schema}.documents
-            SET status = $2
+            SET status = $2, updated_at = NOW()
             WHERE id = $1;",
         ))
         .bind(id)
@@ -73,10 +73,11 @@ impl Coordinator for Arc<Service> {
         })?;
 
         let schema = namespace.schema();
+        let language = "english";
         for (chunk, embedding) in request.chunks.iter().zip(embeddings) {
             sqlx::query(&format!(
                 "INSERT INTO {schema}.chunks
-                (document_id, page, content, semantic_vector, text_vector) VALUES ($1, $2, $3, $4, to_tsvector('english', $5));",
+                (document_id, page, content, semantic_vector, text_vector) VALUES ($1, $2, $3, $4, to_tsvector('{language}', $5));",
             ))
             .bind(document_id)
             .bind(chunk.page as i32)
@@ -94,7 +95,7 @@ impl Coordinator for Arc<Service> {
 
         sqlx::query(&format!(
             "UPDATE {schema}.documents
-            SET status = $2
+            SET status = $2, updated_at = NOW()
             WHERE id = $1;",
         ))
         .bind(document_id)

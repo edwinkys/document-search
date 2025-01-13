@@ -20,21 +20,26 @@ class Coordinator:
         request = protos.RegisterWorkerRequest(id=id, address=address)
         self.connection.RegisterWorker(request=request)
 
-    def update_document(self, namespace: str, id: str, status: str):
+    def update_document(self, namespace: str, document_id: str, status: str):
         status = protos.DocumentStatus.Value(status.upper())
         request = protos.UpdateDocumentRequest(
             namespace=namespace,
-            id=id,
+            document_id=document_id,
             status=status,
         )
 
         self.connection.UpdateDocument(request=request)
 
-    def create_chunk(self, namespace: str, id: str, chunks: list[Chunk]):
+    def create_chunk(
+        self,
+        namespace: str,
+        document_id: str,
+        chunks: list[Chunk],
+    ):
         chunks = [chunk.to_proto() for chunk in chunks]
         request = protos.CreateChunkRequest(
             namespace=namespace,
-            id=id,
+            document_id=document_id,
             chunks=chunks,
         )
 

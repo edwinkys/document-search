@@ -25,5 +25,6 @@ package-lock.json
 !.env.example
 
 # Misc.
+dl-tmp/
 .ropeproject/
 .ds_store
