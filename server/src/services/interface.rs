@@ -443,9 +443,14 @@ mod tests {
     async fn teardown(service: Arc<Service>) {
         service.queue.purge().await.unwrap();
 
-        sqlx::query("TRUNCATE TABLE namespaces")
-            .execute(&service.database)
-            .await
-            .unwrap();
+        let namespaces: Vec<Namespace> =
+            sqlx::query_as("SELECT * FROM namespaces")
+                .fetch_all(&service.database)
+                .await
+                .unwrap();
+
+        for namespace in namespaces {
+            service.remove_namespace(namespace.name).await.unwrap();
+        }
     }
 }
