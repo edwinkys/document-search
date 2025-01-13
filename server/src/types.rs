@@ -15,6 +15,7 @@ use uuid::Uuid;
 pub type NamespaceID = Uuid;
 pub type WorkerID = Uuid;
 pub type DocumentID = Uuid;
+pub type ChunkID = Uuid;
 
 #[derive(Debug, Clone)]
 pub struct Worker {
@@ -289,8 +290,8 @@ impl Document {
 /// type, we only specify the columns listed in the struct.
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Chunk {
-    pub id: Uuid,
-    pub document_id: Uuid,
+    pub id: ChunkID,
+    pub document_id: DocumentID,
     pub page: i32,
     pub content: String,
 }

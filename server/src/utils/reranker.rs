@@ -1,6 +1,4 @@
 use super::*;
-use std::cmp::Ordering;
-use std::hash::Hash;
 
 /// Rerank lists of items.
 ///
@@ -55,14 +53,14 @@ mod tests {
     fn test_rrf() {
         let reranker = setup();
         let ranked = reranker.rrf(60, 3);
-        assert_eq!(ranked, vec!["a", "d", "c"]);
+        assert_eq!(ranked, vec![4, 1, 3]);
     }
 
-    fn setup() -> Reranker<&'static str> {
+    fn setup() -> Reranker<u8> {
         Reranker::new(vec![
-            vec!["a", "b", "c"],
-            vec!["a", "c", "d"],
-            vec!["d", "e", "f"],
+            vec![1, 2, 3, 4],
+            vec![1, 3, 4, 5],
+            vec![4, 5, 6, 7],
         ])
     }
 }

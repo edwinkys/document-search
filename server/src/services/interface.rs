@@ -17,6 +17,7 @@ pub fn create_router(service: Arc<Service>) -> Router {
         .route("/namespaces/:name", delete(remove_namespace))
         .route("/namespaces/:name/documents", post(upload_document))
         .route("/namespaces/:name/documents/:id", delete(remove_document))
+        .route("/namespaces/:name/queries", post(create_query))
         .layer(DefaultBodyLimit::max(64 * 1024 * 1024))
         .with_state(service)
 }
@@ -60,6 +61,12 @@ struct HeartbeatResponse {
 struct CreateNamespacePayload {
     pub name: String,
     pub config: Option<Value>,
+}
+
+#[derive(Deserialize)]
+struct CreateQueryPayload {
+    pub query: String,
+    pub k: Option<usize>,
 }
 
 async fn heartbeat() -> SuccessResponse<HeartbeatResponse> {
@@ -120,11 +127,11 @@ async fn create_namespace(
 async fn remove_namespace(
     TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
     State(service): State<Arc<Service>>,
-    Path(name): Path<String>,
+    Path(namespace): Path<String>,
 ) -> Result<SuccessResponse<Option<Namespace>>, ErrorResponse> {
     service.validate_secret(bearer.token())?;
 
-    let namespace = service.remove_namespace(name).await?;
+    let namespace = service.remove_namespace(namespace).await?;
     if let Some(namespace) = &namespace {
         tracing::info!("NamespaceRemoved: {namespace:?}");
     }
@@ -191,13 +198,13 @@ async fn upload_document(
     })
 }
 
-pub async fn remove_document(
+async fn remove_document(
     TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
     State(service): State<Arc<Service>>,
-    Path((name, id)): Path<(String, String)>,
+    Path((namespace, id)): Path<(String, String)>,
 ) -> Result<SuccessResponse<Option<Document>>, ErrorResponse> {
     service.validate_secret(bearer.token())?;
-    let namespace = service.get_namespace(name).await?;
+    let namespace = service.get_namespace(namespace).await?;
     let id = service.validate_uuid(&id)?;
 
     let document = service.remove_document(&namespace, &id).await?;
@@ -213,6 +220,25 @@ pub async fn remove_document(
     })
 }
 
+async fn create_query(
+    TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
+    State(service): State<Arc<Service>>,
+    Path(namespace): Path<String>,
+    Json(payload): Json<CreateQueryPayload>,
+) -> Result<SuccessResponse<Vec<Chunk>>, ErrorResponse> {
+    service.validate_secret(bearer.token())?;
+    let namespace = service.get_namespace(namespace).await?;
+
+    let CreateQueryPayload { query, k } = payload;
+    let k = k.unwrap_or(10);
+
+    let results = service.create_query(&namespace, query, k as u8).await?;
+    Ok(SuccessResponse {
+        code: StatusCode::OK,
+        data: results,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -223,8 +249,10 @@ mod tests {
     use lapin::options::BasicConsumeOptions;
     use lapin::types::FieldTable;
     use lapin::{Connection, ConnectionProperties};
+    use protos::coordinator_server::Coordinator;
     use std::fs::File;
     use std::io::{BufReader, Read};
+    use tonic::Request;
 
     const BEARER: &str = "secretkey";
 
@@ -340,22 +368,28 @@ mod tests {
         assert_eq!(document.id, task.document_id);
     }
 
+    #[tokio::test]
+    async fn test_create_query() {
+        let app = setup_populated().await;
+        let payload = json!({ "query": "Do you like banana?", "k": 2 });
+        let response = app
+            .post("/namespaces/existing_ns/queries")
+            .authorization_bearer(BEARER)
+            .json(&payload)
+            .await;
+
+        let chunks: Vec<Chunk> = response.json();
+        assert_eq!(chunks.len(), 2);
+        assert!(chunks[0].content.contains("Bananas"));
+        assert!(chunks[1].content.contains("Oranges"));
+    }
+
     async fn setup() -> TestServer {
         dotenv().ok();
 
         let config = Configuration::default();
         let state = Arc::new(Service::new(&config).await);
-        state.queue.purge().await.unwrap();
-
-        let namespaces: Vec<Namespace> =
-            sqlx::query_as("SELECT * FROM namespaces")
-                .fetch_all(&state.database)
-                .await
-                .unwrap();
-
-        for namespace in namespaces {
-            state.remove_namespace(&namespace.name).await.unwrap();
-        }
+        teardown(state.clone()).await;
 
         state
             .create_namespace("existing_ns", &NamespaceConfig::default())
@@ -363,5 +397,55 @@ mod tests {
             .unwrap();
 
         TestServer::new(create_router(state)).unwrap()
+    }
+
+    async fn setup_populated() -> TestServer {
+        dotenv().ok();
+
+        let config = Configuration::default();
+        let state = Arc::new(Service::new(&config).await);
+        teardown(state.clone()).await;
+
+        let namespace = state
+            .create_namespace("existing_ns", &NamespaceConfig::default())
+            .await
+            .unwrap();
+
+        let document = state
+            .create_document(&namespace, &json!({ "key": "value" }))
+            .await
+            .unwrap();
+
+        let sentences = vec![
+            "Approximate nearest neighbor finds similar items fast.",
+            "ANNS balances speed over perfect accuracy.",
+            "Popular ANNS methods include hashing and graphs.",
+            "Bananas are packed with potassium and energy.",
+            "Oranges are juicy and full of vitamin C.",
+        ];
+
+        let request = protos::CreateChunkRequest {
+            namespace: namespace.name.clone(),
+            document_id: document.id.to_string(),
+            chunks: sentences
+                .iter()
+                .map(|sentence| protos::Chunk {
+                    page: 1,
+                    content: sentence.to_string(),
+                })
+                .collect(),
+        };
+
+        state.create_chunk(Request::new(request)).await.unwrap();
+        TestServer::new(create_router(state)).unwrap()
+    }
+
+    async fn teardown(service: Arc<Service>) {
+        service.queue.purge().await.unwrap();
+
+        sqlx::query("TRUNCATE TABLE namespaces")
+            .execute(&service.database)
+            .await
+            .unwrap();
     }
 }

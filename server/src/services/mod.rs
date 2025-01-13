@@ -4,6 +4,7 @@ pub mod interface;
 use crate::apis::{QueueAPI, StorageAPI};
 use crate::protos;
 use crate::types::*;
+use crate::utils::Reranker;
 use axum::http::StatusCode;
 use interface::ErrorResponse;
 use serde::{Deserialize, Serialize};
@@ -266,5 +267,80 @@ impl Service {
         })?;
 
         Ok(document)
+    }
+
+    /// Queries the database for chunks similar to the given query.
+    pub async fn create_query(
+        &self,
+        namespace: &Namespace,
+        query: impl AsRef<str>,
+        k: u8,
+    ) -> Result<Vec<Chunk>, ErrorResponse> {
+        let query = query.as_ref();
+        let model = namespace.config.embedding.model()?;
+        let embedding = model.generate(query).await?;
+
+        let schema = namespace.schema();
+        let semantic_results: Vec<ChunkID> = sqlx::query_scalar(&format!(
+            "SELECT id FROM {schema}.chunks
+            ORDER BY semantic_vector <=> $1::vector
+            LIMIT $2;",
+        ))
+        .bind(&embedding)
+        .bind(k as i32)
+        .fetch_all(&self.database)
+        .await
+        .map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to execute semantic search: {_e:?}");
+            ErrorResponse {
+                code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: "Failed to execute semantic search.".to_string(),
+                solution: None,
+            }
+        })?;
+
+        let language = "english";
+        let text_results: Vec<ChunkID> = sqlx::query_scalar(&format!(
+            "SELECT id FROM {schema}.chunks
+            WHERE text_vector @@ plainto_tsquery('{language}', $1)
+            ORDER BY ts_rank_cd(text_vector, plainto_tsquery('{language}', $1))
+            DESC LIMIT $2;",
+        ))
+        .bind(query)
+        .bind(k as i32)
+        .fetch_all(&self.database)
+        .await
+        .map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed when performing full-text search: {_e:?}");
+            ErrorResponse {
+                code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: "Failed when performing full-text search.".to_string(),
+                solution: None,
+            }
+        })?;
+
+        let reranker = Reranker::new(vec![semantic_results, text_results]);
+        let results = reranker.rrf(60, k);
+
+        let chunks: Vec<Chunk> = sqlx::query_as(&format!(
+            "SELECT * FROM {schema}.chunks
+            WHERE id = ANY($1);",
+        ))
+        .bind(&results)
+        .fetch_all(&self.database)
+        .await
+        .map_err(|_e| {
+            #[cfg(test)]
+            eprintln!("Failed to retrieve the query results: {_e:?}");
+            ErrorResponse {
+                code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: "Failed to retrieve the query results.".to_string(),
+                solution: None,
+            }
+        })?;
+
+        Ok(chunks)
     }
 }

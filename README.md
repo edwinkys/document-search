@@ -164,3 +164,9 @@ naming conventions.
 ```bash
 poetry run black .
 ```
+
+## Additional Resources
+
+- [Docling](https://ds4sd.github.io/docling)
+- [OpenAI](https://platform.openai.com/docs)
+- [Supabase](https://supabase.com/docs)
